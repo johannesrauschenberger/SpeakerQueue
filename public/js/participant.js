@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const joinSection = document.getElementById("join-section");
     const meetingSection = document.getElementById("meeting-section");
     const participantName = document.getElementById("participant-name");
+    const raiseHandButton = document.getElementById("raise-hand-button");
+    let handRaised = false;
 
     if (hostLink && meetingId) {
         hostLink.href = `/host/${meetingId}`;
@@ -31,4 +33,17 @@ document.addEventListener("DOMContentLoaded", () => {
         joinSection.hidden = true;
         meetingSection.hidden = false;
     });
+
+    raiseHandButton.addEventListener("click", () => {
+        if (!handRaised) {
+            socket.emit("raise-hand");
+            handRaised = true;
+            raiseHandButton.textContent = "Lower Hand";
+        } else {
+            socket.emit("lower-hand");
+            handRaised = false;
+            raiseHandButton.textContent = "Raise Hand";
+        }
+    });
+    
 });

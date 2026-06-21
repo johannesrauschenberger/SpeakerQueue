@@ -35,8 +35,16 @@ function broadcastMeetingState(meetingId) {
     io.to(meetingId).emit("meeting-state", {
         participantCount: meeting.participants.length,
         participants: meeting.participants.map(participant => ({
-            name: participant.name
-        }))
+            name: participant.name,
+            state: participant.state
+        })),
+        queue: meeting.queue
+            .map(socketId => meeting.participants.find(p => p.socketId === socketId))
+            .filter(Boolean)
+            .map(participant => ({
+                name: participant.name
+            })),
+        currentSpeaker: meeting.currentSpeaker
     });
 }
 
@@ -75,10 +83,48 @@ io.on("connection", (socket) => {
             if (!alreadyInMeeting) {
                 meeting.participants.push({
                     socketId: socket.id,
-                    name: cleanName
+                    name: cleanName,
+                    state: "connected",
+                    joinedAt: Date.now(),
+                    handRaisedAt: null
                 });
             }
         }
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("raise-hand", () => {
+        const meetingId = socket.data.meetingId;
+        if (!meetingId) return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        const participant = meeting.participants.find(p => p.socketId === socket.id);
+
+        if (!participant) return;
+
+        participant.state = "raised";
+        participant.handRaisedAt = Date.now();
+
+        if (!meeting.queue.includes(socket.id)) {
+            meeting.queue.push(socket.id);
+        }
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("lower-hand", () => {
+        const meetingId = socket.data.meetingId;
+        if (!meetingId) return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        const participant = meeting.participants.find(p => p.socketId === socket.id);
+
+        if (!participant) return;
+
+        participant.state = "connected";
+        participant.handRaisedAt = null;
+        meeting.queue = meeting.queue.filter(socketId => socketId !== socket.id);
 
         broadcastMeetingState(meetingId);
     });
