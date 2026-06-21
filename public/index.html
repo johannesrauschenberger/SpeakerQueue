@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebateQueue</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<h1>DebateQueue</h1>
+
+<section>
+    <h2>Create a Meeting</h2>
+
+    <form action="/meetings" method="POST">
+        <label for="meeting-name">Meeting name</label>
+        <br>
+        <input id="meeting-name" name="meetingName" type="text" placeholder="Senate Meeting – 25 June" required>
+        <br><br>
+        <button type="submit">Create Meeting</button>
+    </form>
+</section>
+
+</body>
+</html>

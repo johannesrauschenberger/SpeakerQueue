@@ -8,18 +8,21 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = 3000;
-
 const meetings = {};
 
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 function generateMeetingId() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-function getOrCreateMeeting(meetingId) {
+function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
     if (!meetings[meetingId]) {
         meetings[meetingId] = {
+            id: meetingId,
+            name: meetingName,
+            createdAt: Date.now(),
             participants: [],
             queue: [],
             currentSpeaker: null
@@ -33,6 +36,8 @@ function broadcastMeetingState(meetingId) {
     const meeting = getOrCreateMeeting(meetingId);
 
     io.to(meetingId).emit("meeting-state", {
+        meetingName: meeting.name,
+        createdAt: meeting.createdAt,
         participantCount: meeting.participants.length,
         participants: meeting.participants.map(participant => ({
             socketId: participant.socketId,
@@ -48,7 +53,7 @@ function broadcastMeetingState(meetingId) {
                 role: participant.role
             })),
         currentSpeaker: meeting.currentSpeaker
-            ? { 
+            ? {
                 name: meeting.currentSpeaker.name,
                 role: meeting.currentSpeaker.role
             }
@@ -57,7 +62,15 @@ function broadcastMeetingState(meetingId) {
 }
 
 app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.post("/meetings", (req, res) => {
     const meetingId = generateMeetingId();
+    const meetingName = req.body.meetingName?.trim() || "Untitled Meeting";
+
+    getOrCreateMeeting(meetingId, meetingName);
+
     res.redirect(`/host/${meetingId}`);
 });
 
@@ -143,7 +156,6 @@ io.on("connection", (socket) => {
         if (!meetingId) return;
 
         const meeting = getOrCreateMeeting(meetingId);
-
         const nextSocketId = meeting.queue.shift();
 
         if (!nextSocketId) {
@@ -185,6 +197,14 @@ io.on("connection", (socket) => {
             meeting.participants = meeting.participants.filter(
                 participant => participant.socketId !== socket.id
             );
+
+            meeting.queue = meeting.queue.filter(
+                socketId => socketId !== socket.id
+            );
+
+            if (meeting.currentSpeaker?.socketId === socket.id) {
+                meeting.currentSpeaker = null;
+            }
         }
 
         broadcastMeetingState(meetingId);

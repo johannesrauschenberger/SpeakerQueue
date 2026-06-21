@@ -11,6 +11,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const participantLinkInput = document.getElementById("participant-link");
     const copyLinkButton = document.getElementById("copy-link-button");
     const copyLinkMessage = document.getElementById("copy-link-message");
+    const meetingNameDisplay = document.getElementById("meeting-name-display");
+    const createdAtDisplay = document.getElementById("created-at-display");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
@@ -45,6 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     socket.on("meeting-state", (state) => {
+        meetingNameDisplay.textContent = state.meetingName;
+
+        const createdAt = new Date(state.createdAt);
+        createdAtDisplay.textContent = `Created: ${createdAt.toLocaleString()}`;
+
         participantCount.textContent = state.participantCount;
 
         participantList.innerHTML = "";
@@ -65,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         currentSpeaker.textContent = state.currentSpeaker
             ? `${state.currentSpeaker.name} (${state.currentSpeaker.role})`
-            : "Nobody";
+            : "Host";
     });
 
     nextSpeakerButton.addEventListener("click", () => {
