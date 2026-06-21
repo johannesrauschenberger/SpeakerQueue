@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const participantList = document.getElementById("participant-list");
     const meetingIdDisplay = document.getElementById("meeting-id-display");
     const queueList = document.getElementById("queue-list");
+    const currentSpeaker = document.getElementById("current-speaker");
+    const nextSpeakerButton = document.getElementById("next-speaker-button");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
@@ -38,5 +40,14 @@ document.addEventListener("DOMContentLoaded", () => {
             li.textContent = participant.name;
             queueList.appendChild(li);
         });
+
+        currentSpeaker.textContent = state.currentSpeaker
+            ? state.currentSpeaker.name
+            : "Nobody";
     });
+
+    nextSpeakerButton.addEventListener("click", () => {
+        socket.emit("next-speaker");
+    });
+
 });

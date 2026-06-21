@@ -45,6 +45,8 @@ function broadcastMeetingState(meetingId) {
                 name: participant.name
             })),
         currentSpeaker: meeting.currentSpeaker
+            ? { name: meeting.currentSpeaker.name }
+            : null
     });
 }
 
@@ -125,6 +127,40 @@ io.on("connection", (socket) => {
         participant.state = "connected";
         participant.handRaisedAt = null;
         meeting.queue = meeting.queue.filter(socketId => socketId !== socket.id);
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("next-speaker", () => {
+        const meetingId = socket.data.meetingId;
+        if (!meetingId) return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+
+        const nextSocketId = meeting.queue.shift();
+
+        if (!nextSocketId) {
+            meeting.currentSpeaker = null;
+            broadcastMeetingState(meetingId);
+            return;
+        }
+
+        const nextParticipant = meeting.participants.find(
+            participant => participant.socketId === nextSocketId
+        );
+
+        if (!nextParticipant) {
+            broadcastMeetingState(meetingId);
+            return;
+        }
+
+        nextParticipant.state = "speaking";
+        nextParticipant.handRaisedAt = null;
+
+        meeting.currentSpeaker = {
+            socketId: nextParticipant.socketId,
+            name: nextParticipant.name
+        };
 
         broadcastMeetingState(meetingId);
     });
