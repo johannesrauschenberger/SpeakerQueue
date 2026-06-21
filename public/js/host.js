@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.participants.forEach((participant) => {
             const li = document.createElement("li");
-            li.textContent = participant.name;
+            li.textContent = `${participant.name} (${participant.role})`;
             participantList.appendChild(li);
         });
 
@@ -59,12 +59,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.queue.forEach((participant) => {
             const li = document.createElement("li");
-            li.textContent = participant.name;
+            li.textContent = `${participant.name} (${participant.role})`;
             queueList.appendChild(li);
         });
 
         currentSpeaker.textContent = state.currentSpeaker
-            ? state.currentSpeaker.name
+            ? `${state.currentSpeaker.name} (${state.currentSpeaker.role})`
             : "Nobody";
     });
 

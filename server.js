@@ -37,16 +37,21 @@ function broadcastMeetingState(meetingId) {
         participants: meeting.participants.map(participant => ({
             socketId: participant.socketId,
             name: participant.name,
+            role: participant.role,
             state: participant.state
         })),
         queue: meeting.queue
             .map(socketId => meeting.participants.find(p => p.socketId === socketId))
             .filter(Boolean)
             .map(participant => ({
-                name: participant.name
+                name: participant.name,
+                role: participant.role
             })),
         currentSpeaker: meeting.currentSpeaker
-            ? { name: meeting.currentSpeaker.name }
+            ? { 
+                name: meeting.currentSpeaker.name,
+                role: meeting.currentSpeaker.role
+            }
             : null
     });
 }
@@ -67,7 +72,7 @@ app.get("/join/:meetingId", (req, res) => {
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
-    socket.on("join-meeting", ({ meetingId, role, name }) => {
+    socket.on("join-meeting", ({ meetingId, role, name, participantRole }) => {
         const meeting = getOrCreateMeeting(meetingId);
 
         socket.join(meetingId);
@@ -87,6 +92,7 @@ io.on("connection", (socket) => {
                 meeting.participants.push({
                     socketId: socket.id,
                     name: cleanName,
+                    role: participantRole || "Other",
                     state: "connected",
                     joinedAt: Date.now(),
                     handRaisedAt: null
@@ -160,7 +166,8 @@ io.on("connection", (socket) => {
 
         meeting.currentSpeaker = {
             socketId: nextParticipant.socketId,
-            name: nextParticipant.name
+            name: nextParticipant.name,
+            role: nextParticipant.role
         };
 
         broadcastMeetingState(meetingId);

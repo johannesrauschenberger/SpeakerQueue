@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("connect", () => {
         mySocketId = socket.id;
     });
+    const roleSelect = document.getElementById("role-select");
     
 
     if (hostLink && meetingId) {
@@ -26,13 +27,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     joinButton.addEventListener("click", () => {
         const name = nameInput.value.trim();
+        const role = roleSelect.value;
 
         if (!name) return;
 
         socket.emit("join-meeting", {
             meetingId,
             role: "participant",
-            name
+            name,
+            participantRole: role
         });
 
         participantName.textContent = name;
