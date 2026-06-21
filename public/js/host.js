@@ -8,9 +8,31 @@ document.addEventListener("DOMContentLoaded", () => {
     const queueList = document.getElementById("queue-list");
     const currentSpeaker = document.getElementById("current-speaker");
     const nextSpeakerButton = document.getElementById("next-speaker-button");
+    const participantLinkInput = document.getElementById("participant-link");
+    const copyLinkButton = document.getElementById("copy-link-button");
+    const copyLinkMessage = document.getElementById("copy-link-message");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
+    }
+
+    const participantUrl = `${window.location.origin}/join/${meetingId}`;
+
+    if (participantLinkInput && meetingId) {
+        participantLinkInput.value = participantUrl;
+    }
+
+    if (copyLinkButton && participantLinkInput) {
+        copyLinkButton.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(participantLinkInput.value);
+                copyLinkMessage.textContent = "Copied!";
+            } catch (error) {
+                participantLinkInput.select();
+                document.execCommand("copy");
+                copyLinkMessage.textContent = "Copied!";
+            }
+        });
     }
 
     if (meetingIdDisplay && meetingId) {
