@@ -35,6 +35,7 @@ function broadcastMeetingState(meetingId) {
     io.to(meetingId).emit("meeting-state", {
         participantCount: meeting.participants.length,
         participants: meeting.participants.map(participant => ({
+            socketId: participant.socketId,
             name: participant.name,
             state: participant.state
         })),

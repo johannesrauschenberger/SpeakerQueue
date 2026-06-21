@@ -8,7 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const meetingSection = document.getElementById("meeting-section");
     const participantName = document.getElementById("participant-name");
     const raiseHandButton = document.getElementById("raise-hand-button");
+    const participantStatus = document.getElementById("participant-status");
     let handRaised = false;
+    let mySocketId = null;
+    socket.on("connect", () => {
+        mySocketId = socket.id;
+    });
+    
 
     if (hostLink && meetingId) {
         hostLink.href = `/host/${meetingId}`;
@@ -43,6 +49,32 @@ document.addEventListener("DOMContentLoaded", () => {
             socket.emit("lower-hand");
             handRaised = false;
             raiseHandButton.textContent = "Raise Hand";
+        }
+    });
+
+    socket.on("meeting-state", (state) => {
+        const me = state.participants.find(
+            participant => participant.socketId === mySocketId
+        );
+
+        if (!me) return;
+
+        if (me.state === "connected") {
+            participantStatus.textContent = "You are connected.";
+            raiseHandButton.textContent = "Raise Hand";
+            handRaised = false;
+        }
+
+        if (me.state === "raised") {
+            participantStatus.textContent = "Your hand is raised. Waiting in queue.";
+            raiseHandButton.textContent = "Lower Hand";
+            handRaised = true;
+        }
+
+        if (me.state === "speaking") {
+            participantStatus.textContent = "You are currently speaking.";
+            raiseHandButton.textContent = "Lower Hand";
+            handRaised = true;
         }
     });
     
