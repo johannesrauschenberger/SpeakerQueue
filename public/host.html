@@ -6,21 +6,40 @@
     <title>DebateQueue - Host</title>
     <link rel="stylesheet" href="/style.css">
 </head>
-<body>
 
+<body>
 <h1>DebateQueue</h1>
 
-<p>Host View</p>
+<section>
+    <h2>Meeting Information</h2>
 
-<h2>Connected participants</h2>
-<p id="participant-count">0</p>
-<h2>Participants</h2>
-<ul id="participant-list"></ul>
+    <p>Meeting ID</p>
+    <p><strong id="meeting-id-display"></strong></p>
 
-<a id="join-link" href="#">Go to Participant View</a>
+    <p>Connected participants</p>
+    <p id="participant-count">0</p>
+
+    <a id="join-link" href="#">Open Participant View</a>
+</section>
+
+<section>
+    <h2>Current Speaker</h2>
+    <p id="current-speaker">Nobody</p>
+</section>
+
+<section>
+    <h2>Queue</h2>
+    <ol id="queue-list"></ol>
+</section>
+
+<section>
+    <h2>Connected Participants</h2>
+    <ul id="participant-list"></ul>
+</section>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/host.js"></script>
 </body>
+
 </html>

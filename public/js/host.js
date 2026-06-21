@@ -4,9 +4,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const joinLink = document.getElementById("join-link");
     const participantCount = document.getElementById("participant-count");
     const participantList = document.getElementById("participant-list");
+    const meetingIdDisplay = document.getElementById("meeting-id-display");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
+    }
+
+    if (meetingIdDisplay && meetingId) {
+        meetingIdDisplay.textContent = meetingId;
     }
 
     socket.emit("join-meeting", {
