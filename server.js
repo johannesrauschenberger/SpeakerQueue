@@ -6,15 +6,20 @@ const PORT = 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 
+function generateMeetingId() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
 app.get("/", (req, res) => {
-    res.redirect("/host");
+    const meetingId = generateMeetingId();
+    res.redirect(`/host/${meetingId}`);
 });
 
-app.get("/host", (req, res) => {
+app.get("/host/:meetingId", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "host.html"));
 });
 
-app.get("/join", (req, res) => {
+app.get("/join/:meetingId", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "participant.html"));
 });
 
