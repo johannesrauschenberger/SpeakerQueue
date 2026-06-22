@@ -20,6 +20,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let handRaised = false;
     let mySocketId = null;
+    let wakeLock = null;
+
+    async function requestWakeLock() {
+        if (!("wakeLock" in navigator)) {
+            return;
+        }
+
+        try {
+            wakeLock = await navigator.wakeLock.request("screen");
+
+            wakeLock.addEventListener("release", () => {
+                wakeLock = null;
+            });
+        } catch (error) {
+            console.warn("Wake lock request failed:", error);
+        }
+    }
+
+    async function releaseWakeLock() {
+        if (!wakeLock) return;
+
+        try {
+            await wakeLock.release();
+            wakeLock = null;
+        } catch (error) {
+            console.warn("Wake lock release failed:", error);
+        }
+    }
 
     socket.on("connect", () => {
         mySocketId = socket.id;
@@ -54,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
         participantName.textContent = `${name} · ${participantRole}`;
         joinSection.hidden = true;
         meetingSection.hidden = false;
+        requestWakeLock();
     });
 
     raiseHandButton.addEventListener("click", () => {
@@ -77,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         meetingSection.hidden = true;
         joinSection.hidden = false;
+        releaseWakeLock();
     });
 
     socket.on("meeting-state", (state) => {
@@ -142,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
         joinSection.hidden = true;
         meetingSection.hidden = true;
         endedSection.hidden = false;
+        releaseWakeLock();
     });
 
     lucide.createIcons();
