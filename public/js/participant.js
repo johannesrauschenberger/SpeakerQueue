@@ -1,44 +1,57 @@
 document.addEventListener("DOMContentLoaded", () => {
     const socket = io();
 
-    const hostLink = document.getElementById("host-link");
     const nameInput = document.getElementById("name-input");
+    const roleSelect = document.getElementById("role-select");
     const joinButton = document.getElementById("join-button");
     const joinSection = document.getElementById("join-section");
     const meetingSection = document.getElementById("meeting-section");
-    const participantName = document.getElementById("participant-name");
-    const raiseHandButton = document.getElementById("raise-hand-button");
-    const participantStatus = document.getElementById("participant-status");
-    let handRaised = false;
-    let mySocketId = null;
-    socket.on("connect", () => {
-        mySocketId = socket.id;
-    });
-    const roleSelect = document.getElementById("role-select");
     const endedSection = document.getElementById("ended-section");
 
-    if (hostLink && meetingId) {
-        hostLink.href = `/host/${meetingId}`;
+    const participantName = document.getElementById("participant-name");
+    const participantStatus = document.getElementById("participant-status");
+    const raiseHandButton = document.getElementById("raise-hand-button");
+    const raiseHandLabel = document.getElementById("raise-hand-label");
+    const leaveMeetingButton = document.getElementById("leave-meeting-button");
+
+    const participantMeetingName = document.getElementById("participant-meeting-name");
+    const activeMeetingName = document.getElementById("active-meeting-name");
+    const participantHelpText = document.getElementById("participant-help-text");
+
+    let handRaised = false;
+    let mySocketId = null;
+
+    socket.on("connect", () => {
+        mySocketId = socket.id;
+
+        socket.emit("join-meeting", {
+            meetingId,
+            role: "viewer"
+        });
+    });
+
+    function updateJoinButton() {
+        joinButton.disabled =
+            nameInput.value.trim() === "" || roleSelect.value === "";
     }
 
-    nameInput.addEventListener("input", () => {
-        joinButton.disabled = nameInput.value.trim() === "";
-    });
+    nameInput.addEventListener("input", updateJoinButton);
+    roleSelect.addEventListener("change", updateJoinButton);
 
     joinButton.addEventListener("click", () => {
         const name = nameInput.value.trim();
-        const role = roleSelect.value;
+        const participantRole = roleSelect.value;
 
-        if (!name) return;
+        if (!name || !participantRole) return;
 
         socket.emit("join-meeting", {
             meetingId,
             role: "participant",
             name,
-            participantRole: role
+            participantRole
         });
 
-        participantName.textContent = name;
+        participantName.textContent = `${name} · ${participantRole}`;
         joinSection.hidden = true;
         meetingSection.hidden = false;
     });
@@ -46,38 +59,82 @@ document.addEventListener("DOMContentLoaded", () => {
     raiseHandButton.addEventListener("click", () => {
         if (!handRaised) {
             socket.emit("raise-hand");
-            handRaised = true;
-            raiseHandButton.textContent = "Lower Hand";
         } else {
             socket.emit("lower-hand");
-            handRaised = false;
-            raiseHandButton.textContent = "Raise Hand";
         }
     });
 
+    leaveMeetingButton.addEventListener("click", () => {
+        const confirmed = confirm("Leave this meeting?");
+
+        if (!confirmed) return;
+
+        socket.emit("leave-meeting");
+
+        handRaised = false;
+        raiseHandLabel.textContent = "Raise hand";
+        raiseHandButton.classList.remove("is-raised", "is-speaking");
+
+        meetingSection.hidden = true;
+        joinSection.hidden = false;
+    });
+
     socket.on("meeting-state", (state) => {
+        document.title = `${state.meetingName} | SpeakerQueue`;
+
+        participantMeetingName.textContent = state.meetingName;
+        activeMeetingName.textContent = state.meetingName;
+
         const me = state.participants.find(
             participant => participant.socketId === mySocketId
         );
 
         if (!me) return;
 
+        raiseHandButton.classList.remove("is-raised", "is-speaking");
+
+        participantStatus.classList.remove(
+            "status-connected",
+            "status-raised",
+            "status-speaking"
+        );
+
         if (me.state === "connected") {
             participantStatus.textContent = "You are connected.";
-            raiseHandButton.textContent = "Raise Hand";
+            raiseHandLabel.textContent = "Raise hand";
             handRaised = false;
+            participantStatus.classList.add("status-connected");
+            participantHelpText.textContent =
+                "Raise your hand to join the speaking queue.";
         }
 
         if (me.state === "raised") {
-            participantStatus.textContent = "Your hand is raised. Waiting in queue.";
-            raiseHandButton.textContent = "Lower Hand";
+            const queueIndex = state.queue.findIndex(
+                participant => participant.socketId === mySocketId
+            );
+
+            const queuePosition = queueIndex >= 0 ? queueIndex + 1 : null;
+
+            participantStatus.textContent = queuePosition
+                ? `Your hand is raised. Position in queue: ${queuePosition}.`
+                : "Your hand is raised. Waiting in queue.";
+
+            raiseHandLabel.textContent = "Lower hand";
+            raiseHandButton.classList.add("is-raised");
             handRaised = true;
+            participantStatus.classList.add("status-raised");
+            participantHelpText.textContent =
+                "Keep your hand raised while waiting. Lower it if you no longer wish to speak.";
         }
 
         if (me.state === "speaking") {
             participantStatus.textContent = "You are currently speaking.";
-            raiseHandButton.textContent = "Lower Hand";
+            raiseHandLabel.textContent = "Lower hand";
+            raiseHandButton.classList.add("is-speaking");
             handRaised = true;
+            participantStatus.classList.add("status-speaking");
+            participantHelpText.textContent =
+                "Lower your hand when you are finished speaking.";
         }
     });
 
@@ -86,5 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         meetingSection.hidden = true;
         endedSection.hidden = false;
     });
-    
+
+    lucide.createIcons();
+
 });

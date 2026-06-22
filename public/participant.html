@@ -4,55 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpeakerQueue - Participant</title>
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <link rel="stylesheet" href="/style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+<body class="participant-page">
 
-<body>
-<h1>DebateQueue</h1>
+<main class="participant-shell">
+    <section id="join-section" class="participant-card">
+        <p class="eyebrow">Participant</p>
+        <h1>SpeakerQueue</h1>
 
-<p>Participant View</p>
+        <p id="participant-meeting-name" class="participant-meeting-name">
+            Join meeting
+        </p>
 
-<section id="join-section">
-    <label for="name-input">Your name</label>
-    <br>
-    <input id="name-input" type="text" placeholder="Enter your name">
- 
-    <br><br>
-    <label for="role-select">Role</label>
-    <br>
-    <select id="role-select">
-        <option value="Faculty">Faculty</option>
-        <option value="Student Representative">Student Representative</option>
-        <option value="Non-academic Staff">Non-academic Staff</option>
-        <option value="Guest">Guest</option>
-        <option value="Other">Other</option>
-    </select>
+        <div class="participant-form">
+            <label for="name-input">Your name</label>
+            <input id="name-input" type="text" placeholder="Enter your name">
 
-    <br><br>
-    <button id="join-button" disabled>Join Meeting</button>
-</section>
+            <label for="role-select">Role</label>
+            <select id="role-select">
+                <option value="" disabled selected>Select role</option>
+                <option value="Faculty">Faculty</option>
+                <option value="Student Representative">Student Representative</option>
+                <option value="Non-academic Staff">Non-academic Staff</option>
+                <option value="Guest">Guest</option>
+                <option value="Other">Other</option>
+            </select>
 
-<section id="meeting-section" hidden>
-    <p>Joined as: <strong id="participant-name"></strong></p>
-    <p id="participant-status">You are connected.</p>
-    <button id="raise-hand-button">Raise Hand</button>
-</section>
+            <button id="join-button" disabled>Join meeting</button>
+        </div>
+    </section>
 
+    <section id="meeting-section" class="participant-card" hidden>
+        <p class="eyebrow">Participant</p>
+        <h1 id="active-meeting-name">Meeting</h1>
 
-<br>
+        <p class="joined-as">
+            Joined as <strong id="participant-name"></strong>
+        </p>
 
-<section id="ended-section" hidden>
-    <h2>Meeting ended</h2>
-    <p>This meeting has ended. Thank you for participating.</p>
-</section>
+        <div id="participant-status" class="participant-status status-connected">
+            You are connected.
+        </div>
 
-<br>
+        <button id="raise-hand-button" class="raise-hand-button" type="button">
+            <i data-lucide="hand"></i>
+            <span id="raise-hand-label">
+                Raise hand
+            </span>
+        </button>
 
-<a id="host-link" href="#">Go to Host View</a>
+        <p id="participant-help-text" class="participant-help-text">
+            Raise your hand to join the speaking queue. Lower it if you no longer wish to speak.
+        </p>
+
+        <button id="leave-meeting-button" class="danger-button" type="button">
+            Leave meeting
+        </button>
+    </section>
+
+    <section id="ended-section" class="participant-card" hidden>
+        <p class="eyebrow">Meeting ended</p>
+        <h1>Thank you</h1>
+        <p>This meeting has ended.</p>
+    </section>
+</main>
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/participant.js"></script>
 </body>
-
 </html>

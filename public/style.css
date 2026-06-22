@@ -434,3 +434,157 @@ dd {
 .modal-close {
     margin-bottom: 16px;
 }
+
+/* Participant view */
+
+.participant-page {
+    min-height: 100vh;
+    padding: 24px;
+    display: grid;
+    place-items: center;
+}
+
+.participant-shell {
+    width: min(100%, 440px);
+}
+
+.participant-card {
+    border-top: 3px solid var(--ink);
+    border-bottom: 1px solid var(--line-strong);
+    padding: 28px 0 32px;
+}
+
+.participant-card h1 {
+    font-size: 2.2rem;
+    margin-bottom: 18px;
+}
+
+.meeting-title,
+.participant-meeting-name {
+    margin: 18px 0 28px;
+    color: var(--ink);
+    font-size: 1.35rem;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.participant-form {
+    display: grid;
+    gap: 10px;
+}
+
+.joined-as {
+    color: var(--muted);
+    margin: 0 0 18px;
+}
+
+.participant-status {
+    margin: 0 0 22px;
+    padding: 12px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background: #fffefa;
+    color: var(--ink);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 650;
+    text-align: center;
+}
+
+.participant-status.status-raised {
+    border-color: var(--accent);
+    background: rgba(47, 79, 79, 0.08);
+    color: var(--accent);
+}
+
+.participant-status.status-speaking {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+}
+
+.participant-help-text {
+    max-width: 320px;
+    margin: -6px auto 22px;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    text-align: center;
+}
+
+#leave-meeting-button {
+    display: block;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.raise-hand-button {
+    width: 210px;
+    height: 210px;
+
+    margin: 0 auto 24px;
+    padding: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+
+    background: white;
+    color: var(--accent);
+
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        background 150ms ease,
+        color 150ms ease,
+        border-color 150ms ease;
+}
+
+.raise-hand-button:hover {
+    background: rgba(47, 79, 79, 0.05);
+}
+
+.raise-hand-button.is-raised,
+.raise-hand-button.is-speaking {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.raise-hand-button.is-raised:hover,
+.raise-hand-button.is-speaking:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+}
+
+.raise-hand-button svg {
+    width: 42px;
+    height: 42px;
+    stroke-width: 1.8;
+}
+
+.raise-hand-button span {
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+@media (max-width: 520px) {
+    .participant-page {
+        align-items: start;
+        padding: 24px 20px;
+    }
+
+    .raise-hand-button {
+        width: 170px;
+        height: 170px;
+    }
+}

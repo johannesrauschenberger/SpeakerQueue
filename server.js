@@ -52,6 +52,7 @@ function broadcastMeetingState(meetingId) {
             .map(socketId => meeting.participants.find(p => p.socketId === socketId))
             .filter(Boolean)
             .map(participant => ({
+                socketId: participant.socketId,
                 name: participant.name,
                 role: participant.role
             })),
@@ -168,7 +169,12 @@ io.on("connection", (socket) => {
 
         participant.state = "connected";
         participant.handRaisedAt = null;
+
         meeting.queue = meeting.queue.filter(socketId => socketId !== socket.id);
+
+        if (meeting.currentSpeaker?.socketId === socket.id) {
+            meeting.currentSpeaker = null;
+        }
 
         broadcastMeetingState(meetingId);
     });
@@ -178,10 +184,23 @@ io.on("connection", (socket) => {
         if (!meetingId) return;
 
         const meeting = getOrCreateMeeting(meetingId);
+
+        if (meeting.currentSpeaker) {
+            const previousSpeaker = meeting.participants.find(
+                participant => participant.socketId === meeting.currentSpeaker.socketId
+            );
+
+            if (previousSpeaker) {
+                previousSpeaker.state = "connected";
+                previousSpeaker.handRaisedAt = null;
+            }
+
+            meeting.currentSpeaker = null;
+        }
+
         const nextSocketId = meeting.queue.shift();
 
         if (!nextSocketId) {
-            meeting.currentSpeaker = null;
             broadcastMeetingState(meetingId);
             return;
         }
@@ -196,13 +215,35 @@ io.on("connection", (socket) => {
         }
 
         nextParticipant.state = "speaking";
-        nextParticipant.handRaisedAt = null;
 
         meeting.currentSpeaker = {
             socketId: nextParticipant.socketId,
             name: nextParticipant.name,
             role: nextParticipant.role
         };
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("leave-meeting", () => {
+        const meetingId = socket.data.meetingId;
+        if (!meetingId) return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+
+        meeting.participants = meeting.participants.filter(
+            participant => participant.socketId !== socket.id
+        );
+
+        meeting.queue = meeting.queue.filter(
+            socketId => socketId !== socket.id
+        );
+
+        if (meeting.currentSpeaker?.socketId === socket.id) {
+            meeting.currentSpeaker = null;
+        }
+
+        socket.data.role = "viewer";
 
         broadcastMeetingState(meetingId);
     });
