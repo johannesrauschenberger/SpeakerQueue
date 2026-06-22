@@ -1,7 +1,9 @@
 const express = require("express");
 const path = require("path");
 const http = require("http");
+const QRCode = require("qrcode");
 const { Server } = require("socket.io");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -81,6 +83,25 @@ app.get("/host/:meetingId", (req, res) => {
 
 app.get("/join/:meetingId", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "participant.html"));
+});
+
+app.get("/qr/:meetingId", async (req, res) => {
+    const meetingId = req.params.meetingId;
+    const participantUrl = `${req.protocol}://${req.get("host")}/join/${meetingId}`;
+
+    try {
+        const qrPng = await QRCode.toBuffer(participantUrl, {
+            type: "png",
+            margin: 1,
+            width: 320
+        });
+
+        res.type("png");
+        res.send(qrPng);
+    } catch (error) {
+        console.error("QR code generation failed:", error);
+        res.status(500).send("QR code generation failed");
+    }
 });
 
 io.on("connection", (socket) => {

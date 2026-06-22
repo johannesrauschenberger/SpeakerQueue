@@ -14,12 +14,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const meetingNameDisplay = document.getElementById("meeting-name-display");
     const createdAtDisplay = document.getElementById("created-at-display");
     const endMeetingButton = document.getElementById("end-meeting-button");
+    const qrCode = document.getElementById("qr-code");
+    const qrCodeLarge = document.getElementById("qr-code-large");
+    const showQrButton = document.getElementById("show-qr-button");
+    const closeQrButton = document.getElementById("close-qr-button");
+    const qrModal = document.getElementById("qr-modal");
+    const qrModalBackdrop = document.getElementById("qr-modal-backdrop");
+    const queueCount = document.getElementById("queue-count");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
     }
 
     const participantUrl = `${window.location.origin}/join/${meetingId}`;
+
+    const qrUrl = `/qr/${meetingId}`;
+
+    if (qrCode) {
+        qrCode.src = qrUrl;
+    }
+
+    if (qrCodeLarge) {
+        qrCodeLarge.src = qrUrl;
+    }
 
     if (participantLinkInput && meetingId) {
         participantLinkInput.value = participantUrl;
@@ -38,6 +55,24 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    if (showQrButton && qrModal) {
+        showQrButton.addEventListener("click", () => {
+            qrModal.hidden = false;
+        });
+    }
+
+    if (closeQrButton && qrModal) {
+        closeQrButton.addEventListener("click", () => {
+            qrModal.hidden = true;
+        });
+    }
+
+    if (qrModalBackdrop && qrModal) {
+        qrModalBackdrop.addEventListener("click", () => {
+            qrModal.hidden = true;
+        });
+    }
+
     if (meetingIdDisplay && meetingId) {
         meetingIdDisplay.textContent = meetingId;
     }
@@ -49,11 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     socket.on("meeting-state", (state) => {
         meetingNameDisplay.textContent = state.meetingName;
+        document.title = `${state.meetingName} | SpeakerQueue`;
 
         const createdAt = new Date(state.createdAt);
         createdAtDisplay.textContent = `Created: ${createdAt.toLocaleString()}`;
 
-        participantCount.textContent = state.participantCount;
+        participantCount.textContent = `${state.participantCount} connected`;
+        queueCount.textContent = `${state.queue.length} waiting`;
 
         participantList.innerHTML = "";
 

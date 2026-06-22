@@ -4,23 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SpeakerQueue</title>
+    <link rel="icon" type="image/png" href="/img/favicon.png">
     <link rel="stylesheet" href="/style.css">
 </head>
-<body>
+<body class="landing-page">
 
-<h1>DebateQueue</h1>
+<main class="landing-shell">
+    <section class="landing-card">
+        <p class="eyebrow">Meeting moderation</p>
 
-<section>
-    <h2>Create a Meeting</h2>
+        <h1>SpeakerQueue</h1>
 
-    <form action="/meetings" method="POST">
-        <label for="meeting-name">Meeting name</label>
-        <br>
-        <input id="meeting-name" name="meetingName" type="text" placeholder="Senate Meeting – 25 June" required>
-        <br><br>
-        <button type="submit">Create Meeting</button>
-    </form>
-</section>
+        <p class="intro">
+            Create a meeting link participants can use to join, identify themselves,
+            and request the floor.
+        </p>
+
+        <form action="/meetings" method="POST" class="meeting-form">
+            <label for="meeting-name">Meeting name</label>
+
+            <input
+                id="meeting-name"
+                name="meetingName"
+                type="text"
+                placeholder="Senate Meeting – 25 June"
+                required
+            >
+
+            <button type="submit">Create meeting</button>
+        </form>
+    </section>
+</main>
 
 </body>
 </html>
