@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         mySocketId = socket.id;
     });
     const roleSelect = document.getElementById("role-select");
-    
+    const endedSection = document.getElementById("ended-section");
 
     if (hostLink && meetingId) {
         hostLink.href = `/host/${meetingId}`;
@@ -79,6 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
             raiseHandButton.textContent = "Lower Hand";
             handRaised = true;
         }
+    });
+
+    socket.on("meeting-ended", () => {
+        joinSection.hidden = true;
+        meetingSection.hidden = true;
+        endedSection.hidden = false;
     });
     
 });

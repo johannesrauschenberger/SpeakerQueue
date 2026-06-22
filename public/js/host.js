@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyLinkMessage = document.getElementById("copy-link-message");
     const meetingNameDisplay = document.getElementById("meeting-name-display");
     const createdAtDisplay = document.getElementById("created-at-display");
+    const endMeetingButton = document.getElementById("end-meeting-button");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
@@ -77,6 +78,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nextSpeakerButton.addEventListener("click", () => {
         socket.emit("next-speaker");
+    });
+
+    endMeetingButton.addEventListener("click", () => {
+        const confirmed = confirm("End this meeting for everyone?");
+
+        if (!confirmed) return;
+
+        socket.emit("end-meeting");
+    });
+
+    socket.on("meeting-ended", () => {
+        alert("Meeting ended.");
+        window.location.href = "/";
     });
 
 });

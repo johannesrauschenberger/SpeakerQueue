@@ -25,7 +25,8 @@ function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
             createdAt: Date.now(),
             participants: [],
             queue: [],
-            currentSpeaker: null
+            currentSpeaker: null,
+            ended: false
         };
     }
 
@@ -183,6 +184,20 @@ io.on("connection", (socket) => {
         };
 
         broadcastMeetingState(meetingId);
+    });
+
+    socket.on("end-meeting", () => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        meeting.ended = true;
+
+        io.to(meetingId).emit("meeting-ended");
+
+        delete meetings[meetingId];
     });
 
     socket.on("disconnect", () => {
