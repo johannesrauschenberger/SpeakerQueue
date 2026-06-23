@@ -128,7 +128,7 @@ io.on("connection", (socket) => {
                 meeting.participants.push({
                     socketId: socket.id,
                     name: cleanName,
-                    role: participantRole || "Other",
+                    role: participantRole || "Andere",
                     state: "connected",
                     joinedAt: Date.now(),
                     handRaisedAt: null
