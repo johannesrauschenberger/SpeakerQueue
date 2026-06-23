@@ -292,6 +292,77 @@ io.on("connection", (socket) => {
         delete meetings[meetingId];
     });
 
+    socket.on("queue-participant", ({ participantId }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        const participant = meeting.participants.find(
+            participant => participant.socketId === participantId
+        );
+
+        if (!participant) return;
+
+        participant.state = "raised";
+        participant.handRaisedAt = Date.now();
+
+        if (!meeting.queue.includes(participantId)) {
+            meeting.queue.push(participantId);
+        }
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("remove-from-queue", ({ participantId }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        const participant = meeting.participants.find(
+            participant => participant.socketId === participantId
+        );
+
+        if (!participant) return;
+
+        participant.state = "connected";
+        participant.handRaisedAt = null;
+
+        meeting.queue = meeting.queue.filter(
+            socketId => socketId !== participantId
+        );
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("remove-participant", ({ participantId }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+
+        meeting.participants = meeting.participants.filter(
+            participant => participant.socketId !== participantId
+        );
+
+        meeting.queue = meeting.queue.filter(
+            socketId => socketId !== participantId
+        );
+
+        if (meeting.currentSpeaker?.socketId === participantId) {
+            meeting.currentSpeaker = null;
+        }
+
+        io.to(participantId).emit("removed-from-meeting");
+
+        broadcastMeetingState(meetingId);
+    });
+
     socket.on("disconnect", () => {
         const meetingId = socket.data.meetingId;
         const role = socket.data.role;

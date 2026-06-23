@@ -638,3 +638,33 @@ dd {
     }
 
 }
+
+.moderation-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+}
+
+.moderation-actions {
+    display: inline-flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.small-button {
+    padding: 5px 8px;
+    font-size: 0.78rem;
+    border-width: 1px;
+}
+
+.danger-small-button {
+    background: transparent;
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.danger-small-button:hover {
+    background: var(--danger);
+    color: white;
+}

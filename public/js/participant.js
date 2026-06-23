@@ -175,6 +175,16 @@ document.addEventListener("DOMContentLoaded", () => {
         releaseWakeLock();
     });
 
+    socket.on("removed-from-meeting", () => {
+        alert("You have been removed from the meeting.");
+
+        releaseWakeLock();
+
+        joinSection.hidden = true;
+        meetingSection.hidden = true;
+        endedSection.hidden = false;
+    });
+
     lucide.createIcons();
 
 });

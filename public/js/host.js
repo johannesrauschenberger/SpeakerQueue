@@ -99,7 +99,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.participants.forEach((participant) => {
             const li = document.createElement("li");
-            li.textContent = `${participant.name} (${participant.role})`;
+            li.className = "moderation-row";
+
+            const label = document.createElement("span");
+            label.textContent = `${participant.name} (${participant.role})`;
+
+            const actions = document.createElement("span");
+            actions.className = "moderation-actions";
+
+            const queueButton = document.createElement("button");
+            queueButton.type = "button";
+            queueButton.className = "small-button";
+            queueButton.textContent = "Call up";
+            queueButton.addEventListener("click", () => {
+                socket.emit("queue-participant", {
+                    participantId: participant.socketId
+                });
+            });
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "small-button danger-small-button";
+            removeButton.textContent = "Remove";
+            removeButton.addEventListener("click", () => {
+                const confirmed = confirm(`Remove ${participant.name} from the meeting?`);
+
+                if (!confirmed) return;
+
+                socket.emit("remove-participant", {
+                    participantId: participant.socketId
+                });
+            });
+
+            actions.appendChild(queueButton);
+            actions.appendChild(removeButton);
+
+            li.appendChild(label);
+            li.appendChild(actions);
+
             participantList.appendChild(li);
         });
 
@@ -107,7 +144,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
         state.queue.forEach((participant) => {
             const li = document.createElement("li");
-            li.textContent = `${participant.name} (${participant.role})`;
+            li.className = "moderation-row";
+
+            const label = document.createElement("span");
+            label.textContent = `${participant.name} (${participant.role})`;
+
+            const actions = document.createElement("span");
+            actions.className = "moderation-actions";
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "small-button danger-small-button";
+            removeButton.textContent = "Remove";
+            removeButton.addEventListener("click", () => {
+                socket.emit("remove-from-queue", {
+                    participantId: participant.socketId
+                });
+            });
+
+            actions.appendChild(removeButton);
+
+            li.appendChild(label);
+            li.appendChild(actions);
+
             queueList.appendChild(li);
         });
 
