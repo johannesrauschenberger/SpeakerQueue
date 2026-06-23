@@ -353,12 +353,29 @@ dd {
     border: 1px solid var(--line-strong);
     background: white;
     padding: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .qr-frame img {
     display: block;
     width: 100%;
     height: auto;
+}
+
+.qr-button {
+    cursor: pointer;
+    appearance: none;
+    border-radius: var(--radius);
+}
+
+.qr-button:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.qr-button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
 }
 
 .button-row {
@@ -508,6 +525,15 @@ dd {
     color: var(--muted);
     font-size: 0.95rem;
     line-height: 1.45;
+    text-align: center;
+}
+
+.participant-page-note {
+    max-width: 320px;
+    margin: 0 auto 22px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
     text-align: center;
 }
 
