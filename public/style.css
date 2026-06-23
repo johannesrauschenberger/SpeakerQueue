@@ -166,6 +166,11 @@ a {
 
 /* App layout */
 
+.app-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
 .app-page {
     min-height: 100vh;
     padding: 28px;
@@ -173,14 +178,13 @@ a {
 }
 
 .app-header {
-    max-width: 1180px;
-    margin: 0 auto 24px;
+    margin: 0 0 24px;
     display: flex;
     justify-content: space-between;
-    gap: 24px;
+    gap: 20px;
     align-items: flex-end;
     border-bottom: 2px solid var(--ink);
-    padding-bottom: 18px;
+    padding-bottom: 16px;
 }
 
 .app-header h1 {
@@ -203,8 +207,6 @@ a {
 }
 
 .dashboard-grid {
-    max-width: 1180px;
-    margin: 0 auto;
     display: grid;
     grid-template-columns: 340px 1fr;
     gap: 20px;
@@ -215,6 +217,11 @@ a {
     border: 1px solid var(--line-strong);
     border-radius: var(--radius);
     padding: 20px;
+}
+
+.dashboard-grid > .panel {
+    max-width: none;
+    margin: 0;
 }
 
 .panel-header {
@@ -347,6 +354,10 @@ dd {
     margin-bottom: 24px;
 }
 
+.sharing-tools label {
+    margin-top: 14px;
+}
+
 .qr-frame {
     width: 100%;
     max-width: 220px;
@@ -354,6 +365,7 @@ dd {
     background: white;
     padding: 10px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    margin-bottom: 24px;
 }
 
 .qr-frame img {
@@ -693,4 +705,9 @@ dd {
 .danger-small-button:hover {
     background: var(--danger);
     color: white;
+}
+
+.small-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }

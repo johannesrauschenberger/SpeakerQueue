@@ -10,114 +10,116 @@
 </head>
 <body class="app-page host-page">
 
-<header class="app-header">
-    <div>
-        <p class="eyebrow">Host dashboard</p>
-        <h1>SpeakerQueue</h1>
-    </div>
-
-    <div class="header-meta">
-        <span id="meeting-name-display">Meeting</span>
-    </div>
-</header>
-
-<main class="dashboard-grid">
-    <section class="panel meeting-panel">
-        <div class="panel-header">
-            <h2>Meeting</h2>
+<div class="app-shell">
+    <header class="app-header">
+        <div>
+            <p class="eyebrow">Host dashboard</p>
+            <h1>SpeakerQueue</h1>
         </div>
 
-        <dl class="meeting-details">
-            <div>
-                <dt>Meeting ID</dt>
-                <dd id="meeting-id-display"></dd>
+        <div class="header-meta">
+            <span id="meeting-name-display">Meeting</span>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <section class="panel meeting-panel">
+            <div class="panel-header">
+                <h2>Meeting</h2>
             </div>
 
-            <div>
-                <dt>Created</dt>
-                <dd id="created-at-display"></dd>
-            </div>
-        </dl>
+            <dl class="meeting-details">
+                <div>
+                    <dt>Meeting ID</dt>
+                    <dd id="meeting-id-display"></dd>
+                </div>
 
-        <div class="sharing-tools">
-            <button id="show-qr-button" type="button" class="qr-frame qr-button">
-                <img id="qr-code" alt="Participant QR code">
-            </button>
+                <div>
+                    <dt>Created</dt>
+                    <dd id="created-at-display"></dd>
+                </div>
+            </dl>
 
-            <label for="participant-link">Participant link</label>
-            <input id="participant-link" type="text" readonly>
-
-            <div class="button-row">
-                <button id="copy-link-button" type="button">
-                    Copy link
+            <div class="sharing-tools">
+                <button id="show-qr-button" type="button" class="qr-frame qr-button">
+                    <img id="qr-code" alt="Participant QR code">
                 </button>
 
-                <a id="join-link" href="#" class="button-link" target="_blank" rel="noopener">
-                    Participant view
-                </a>
+                <label for="participant-link">Participant link</label>
+                <input id="participant-link" type="text" readonly>
+
+                <div class="button-row">
+                    <button id="copy-link-button" type="button">
+                        Copy link
+                    </button>
+
+                    <a id="join-link" href="#" class="button-link" target="_blank" rel="noopener">
+                        Participant view
+                    </a>
+                </div>
+
+                <p id="copy-link-message" class="helper-text"></p>
             </div>
 
-            <p id="copy-link-message" class="helper-text"></p>
-        </div>
+            <button id="end-meeting-button" type="button" class="danger-button">
+                End meeting
+            </button>
+        </section>
 
-        <button id="end-meeting-button" type="button" class="danger-button">
-            End meeting
-        </button>
-    </section>
-
-    <section class="panel speaker-panel">
-        <div class="panel-header">
-            <h2>Current speaker</h2>
-        </div>
-
-        <p id="current-speaker" class="current-speaker">Host</p>
-
-        <button id="next-speaker-button" type="button">
-            Next speaker
-        </button>
-    </section>
-
-    <section class="panel queue-panel">
-        <div class="panel-header">
-            <h2>Queue <span id="queue-count" class="panel-count">0 waiting</span></h2>
-        </div>
-
-        <ol id="queue-list" class="stack-list"></ol>
-    </section>
-
-    <section class="panel participants-panel">
-        <div class="panel-header">
-            <h2>Participants <span id="participant-count" class="panel-count">0 connected</span></h2>
-        </div>
-
-        <ul id="participant-list" class="stack-list"></ul>
-        <form id="manual-participant-form" class="manual-participant-form">
-            <p class="manual-entry-label">Add participant manually</p>
-            <div class="manual-participant-row">
-
-                <input
-                    id="manual-participant-name"
-                    type="text"
-                    placeholder="Name"
-                    autocomplete="off"
-                >
-
-                <select id="manual-participant-role">
-                    <option value="" disabled selected>Role</option>
-                    <option value="Hochschullehrer*innen">Hochschullehrer*innen</option>
-                    <option value="Akademische Mitarbeiter*innen">Akademische Mitarbeiter*innen</option>
-                    <option value="Technik und Verwaltung">Technik und Verwaltung</option>
-                    <option value="Studierende">Studierende</option>
-                    <option value="Präsidium">Präsidium</option>
-                    <option value="Dekane">Dekane</option>
-                    <option value="Andere">Andere</option>
-                </select>
-                <button type="submit">Add</button>
-
+        <section class="panel speaker-panel">
+            <div class="panel-header">
+                <h2>Current speaker</h2>
             </div>
-        </form>
-    </section>
-</main>
+
+            <p id="current-speaker" class="current-speaker">Host</p>
+
+            <button id="next-speaker-button" type="button">
+                Next speaker
+            </button>
+        </section>
+
+        <section class="panel queue-panel">
+            <div class="panel-header">
+                <h2>Queue <span id="queue-count" class="panel-count">0 waiting</span></h2>
+            </div>
+
+            <ol id="queue-list" class="stack-list"></ol>
+        </section>
+
+        <section class="panel participants-panel">
+            <div class="panel-header">
+                <h2>Participants <span id="participant-count" class="panel-count">0 connected</span></h2>
+            </div>
+
+            <ul id="participant-list" class="stack-list"></ul>
+            <form id="manual-participant-form" class="manual-participant-form">
+                <p class="manual-entry-label">Add participant manually</p>
+                <div class="manual-participant-row">
+
+                    <input
+                        id="manual-participant-name"
+                        type="text"
+                        placeholder="Name"
+                        autocomplete="off"
+                    >
+
+                    <select id="manual-participant-role">
+                        <option value="" disabled selected>Role</option>
+                        <option value="Hochschullehrer*innen">Hochschullehrer*innen</option>
+                        <option value="Akademische Mitarbeiter*innen">Akademische Mitarbeiter*innen</option>
+                        <option value="Technik und Verwaltung">Technik und Verwaltung</option>
+                        <option value="Studierende">Studierende</option>
+                        <option value="Präsidium">Präsidium</option>
+                        <option value="Dekane">Dekane</option>
+                        <option value="Andere">Andere</option>
+                    </select>
+                    <button type="submit">Add</button>
+
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
 
 <div id="qr-modal" class="modal" hidden>
     <div class="modal-backdrop" id="qr-modal-backdrop"></div>

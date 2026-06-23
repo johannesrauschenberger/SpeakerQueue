@@ -315,6 +315,32 @@ io.on("connection", (socket) => {
         broadcastMeetingState(meetingId);
     });
 
+    socket.on("move-queued-participant", ({ participantId, direction }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        const currentIndex = meeting.queue.indexOf(participantId);
+
+        if (currentIndex === -1) return;
+
+        const newIndex =
+            direction === "up"
+                ? currentIndex - 1
+                : direction === "down"
+                    ? currentIndex + 1
+                    : currentIndex;
+
+        if (newIndex < 0 || newIndex >= meeting.queue.length) return;
+
+        const [movedParticipant] = meeting.queue.splice(currentIndex, 1);
+        meeting.queue.splice(newIndex, 0, movedParticipant);
+
+        broadcastMeetingState(meetingId);
+    });
+
     socket.on("remove-from-queue", ({ participantId }) => {
         const meetingId = socket.data.meetingId;
         const role = socket.data.role;

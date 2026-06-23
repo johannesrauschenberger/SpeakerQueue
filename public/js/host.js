@@ -110,7 +110,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const queueButton = document.createElement("button");
             queueButton.type = "button";
             queueButton.className = "small-button";
-            queueButton.textContent = "Call up";
+            queueButton.textContent = "Queue";
+            queueButton.disabled = participant.state !== "connected";
             queueButton.addEventListener("click", () => {
                 socket.emit("queue-participant", {
                     participantId: participant.socketId
@@ -142,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         queueList.innerHTML = "";
 
-        state.queue.forEach((participant) => {
+        state.queue.forEach((participant, index) => {
             const li = document.createElement("li");
             li.className = "moderation-row";
 
@@ -151,6 +152,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const actions = document.createElement("span");
             actions.className = "moderation-actions";
+
+            const upButton = document.createElement("button");
+            upButton.type = "button";
+            upButton.className = "small-button";
+            upButton.textContent = "↑";
+            upButton.disabled = index === 0;
+            upButton.addEventListener("click", () => {
+                socket.emit("move-queued-participant", {
+                    participantId: participant.socketId,
+                    direction: "up"
+                });
+            });
+
+            const downButton = document.createElement("button");
+            downButton.type = "button";
+            downButton.className = "small-button";
+            downButton.textContent = "↓";
+            downButton.disabled = index === state.queue.length - 1;
+            downButton.addEventListener("click", () => {
+                socket.emit("move-queued-participant", {
+                    participantId: participant.socketId,
+                    direction: "down"
+                });
+            });
 
             const removeButton = document.createElement("button");
             removeButton.type = "button";
@@ -162,6 +187,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             });
 
+            actions.appendChild(upButton);
+            actions.appendChild(downButton);
             actions.appendChild(removeButton);
 
             li.appendChild(label);
