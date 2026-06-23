@@ -46,7 +46,8 @@ function broadcastMeetingState(meetingId) {
             socketId: participant.socketId,
             name: participant.name,
             role: participant.role,
-            state: participant.state
+            state: participant.state,
+            isManual: participant.isManual || false
         })),
         queue: meeting.queue
             .map(socketId => meeting.participants.find(p => p.socketId === socketId))
@@ -221,6 +222,35 @@ io.on("connection", (socket) => {
             name: nextParticipant.name,
             role: nextParticipant.role
         };
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("add-manual-participant", ({ name, participantRole }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+        const cleanName = typeof name === "string" ? name.trim() : "";
+        const cleanRole = typeof participantRole === "string" ? participantRole.trim() : "";
+
+        if (!cleanName || !cleanRole) return;
+
+        const manualParticipantId = `manual-${Date.now()}-${Math.random()
+            .toString(36)
+            .substring(2, 8)}`;
+
+        meeting.participants.push({
+            socketId: manualParticipantId,
+            name: cleanName,
+            role: cleanRole,
+            state: "connected",
+            joinedAt: Date.now(),
+            handRaisedAt: null,
+            isManual: true
+        });
 
         broadcastMeetingState(meetingId);
     });

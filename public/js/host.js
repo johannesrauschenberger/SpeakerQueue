@@ -21,6 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const qrModal = document.getElementById("qr-modal");
     const qrModalBackdrop = document.getElementById("qr-modal-backdrop");
     const queueCount = document.getElementById("queue-count");
+    const manualParticipantForm = document.getElementById("manual-participant-form");
+    const manualParticipantName = document.getElementById("manual-participant-name");
+    const manualParticipantRole = document.getElementById("manual-participant-role");
 
     if (joinLink && meetingId) {
         joinLink.href = `/join/${meetingId}`;
@@ -112,6 +115,26 @@ document.addEventListener("DOMContentLoaded", () => {
             ? `${state.currentSpeaker.name} (${state.currentSpeaker.role})`
             : "Host";
     });
+
+    if (manualParticipantForm) {
+        manualParticipantForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            const name = manualParticipantName.value.trim();
+            const role = manualParticipantRole.value;
+
+            if (!name || !role) return;
+
+            socket.emit("add-manual-participant", {
+                name,
+                participantRole: role
+            });
+
+            manualParticipantName.value = "";
+            manualParticipantRole.value = "";
+            manualParticipantName.focus();
+        });
+    }
 
     nextSpeakerButton.addEventListener("click", () => {
         socket.emit("next-speaker");

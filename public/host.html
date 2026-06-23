@@ -95,6 +95,31 @@
         </div>
 
         <ul id="participant-list" class="stack-list"></ul>
+        <form id="manual-participant-form" class="manual-participant-form">
+            <p class="manual-entry-label">Add participant manually</p>
+            <div class="manual-participant-row">
+
+                <input
+                    id="manual-participant-name"
+                    type="text"
+                    placeholder="Name"
+                    autocomplete="off"
+                >
+
+                <select id="manual-participant-role">
+                    <option value="" disabled selected>Role</option>
+                    <option value="Hochschullehrer*innen">Hochschullehrer*innen</option>
+                    <option value="Akademische Mitarbeiter*innen">Akademische Mitarbeiter*innen</option>
+                    <option value="Technik und Verwaltung">Technik und Verwaltung</option>
+                    <option value="Studierende">Studierende</option>
+                    <option value="Präsidium">Präsidium</option>
+                    <option value="Dekane">Dekane</option>
+                    <option value="Andere">Andere</option>
+                </select>
+                <button type="submit">Add</button>
+
+            </div>
+        </form>
     </section>
 </main>
 

@@ -588,3 +588,53 @@ dd {
         height: 170px;
     }
 }
+
+.manual-participant-form {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    opacity: 0.82;
+}
+
+.manual-participant-form:focus-within {
+    opacity: 1;
+}
+
+.manual-entry-label {
+    margin: 0 0 10px;
+    color: var(--muted);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.85rem;
+    font-weight: 650;
+}
+
+.manual-participant-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+}
+
+.manual-participant-row input,
+.manual-participant-row select {
+    width: 100%;
+}
+
+.manual-participant-row button {
+    white-space: nowrap;
+    align-self: stretch;
+}
+
+/* Small screens */
+
+@media (max-width: 700px) {
+
+    .manual-participant-row {
+        grid-template-columns: 1fr;
+    }
+
+    .manual-participant-row button {
+        justify-self: stretch;
+    }
+
+}
