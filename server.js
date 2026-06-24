@@ -129,7 +129,7 @@ io.on("connection", (socket) => {
                 meeting.participants.push({
                     socketId: socket.id,
                     name: cleanName,
-                    role: participantRole || "Andere",
+                    role: participantRole || "Gast/Guest",
                     state: "connected",
                     joinedAt: Date.now(),
                     handRaisedAt: null
