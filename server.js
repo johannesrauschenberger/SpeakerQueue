@@ -89,10 +89,17 @@ app.get("/join/:meetingId", (req, res) => {
 
 app.get("/qr/:meetingId", async (req, res) => {
     const meetingId = req.params.meetingId;
-    const participantUrl = `${req.protocol}://${req.get("host")}/join/${meetingId}`;
+    const type = req.query.type === "cohost" ? "cohost" : "participant";
+
+    const sharePath =
+        type === "cohost"
+            ? `/host/${meetingId}`
+            : `/join/${meetingId}`;
+
+    const shareUrl = `${req.protocol}://${req.get("host")}${sharePath}`;
 
     try {
-        const qrPng = await QRCode.toBuffer(participantUrl, {
+        const qrPng = await QRCode.toBuffer(shareUrl, {
             type: "png",
             margin: 1,
             width: 320

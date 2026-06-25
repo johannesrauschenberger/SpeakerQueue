@@ -41,11 +41,31 @@
             </dl>
 
             <div class="sharing-tools">
+                <div class="share-mode-toggle" role="group" aria-label="Share link type">
+                    <button
+                        id="participant-share-button"
+                        type="button"
+                        class="share-mode-button is-active"
+                        data-share-mode="participant"
+                    >
+                        Participants
+                    </button>
+
+                    <button
+                        id="cohost-share-button"
+                        type="button"
+                        class="share-mode-button"
+                        data-share-mode="cohost"
+                    >
+                        Co-host
+                    </button>
+                </div>
+                
                 <button id="show-qr-button" type="button" class="qr-frame qr-button">
                     <img id="qr-code" alt="Participant QR code">
                 </button>
 
-                <label for="participant-link">Participant link</label>
+                <label id="share-link-label" for="participant-link">Participant link</label>
                 <input id="participant-link" type="text" readonly>
 
                 <div class="button-row">
@@ -53,9 +73,18 @@
                         Copy link
                     </button>
 
-                    <a id="join-link" href="#" class="button-link" target="_blank" rel="noopener">
+                    <a id="join-link" class="secondary-button" href="#">
                         Participant view
                     </a>
+
+                    <div id="cohost-notice" class="cohost-notice" hidden>
+                        <i data-lucide="info"></i>
+
+                        <div class="cohost-notice-text">
+                            <strong>Share this link only</strong>
+                            <span>with trusted moderators.</span>
+                        </div>
+                    </div>
                 </div>
 
                 <p id="copy-link-message" class="helper-text"></p>
@@ -133,7 +162,7 @@
         </button>
 
         <img id="qr-code-large" alt="Large participant QR code">
-        <p>Scan to join as a participant</p>
+        <p id="qr-modal-caption">Scan to join as a participant</p>
     </div>
 </div>
 

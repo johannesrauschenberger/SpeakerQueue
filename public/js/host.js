@@ -24,26 +24,97 @@ document.addEventListener("DOMContentLoaded", () => {
     const manualParticipantForm = document.getElementById("manual-participant-form");
     const manualParticipantName = document.getElementById("manual-participant-name");
     const manualParticipantRole = document.getElementById("manual-participant-role");
+    const participantShareButton = document.getElementById("participant-share-button");
+    const cohostShareButton = document.getElementById("cohost-share-button");
+    const shareModeButtons = document.querySelectorAll(".share-mode-button");
+    const shareLinkLabel = document.getElementById("share-link-label");
+    const qrModalCaption = document.getElementById("qr-modal-caption");
+    const cohostNotice = document.getElementById("cohost-notice");
 
-    if (joinLink && meetingId) {
-        joinLink.href = `/join/${meetingId}`;
+    let currentShareMode = "participant";
+
+    function getShareUrl(mode) {
+        if (mode === "cohost") {
+            return `${window.location.origin}/host/${meetingId}`;
+        }
+
+        return `${window.location.origin}/join/${meetingId}`;
     }
 
-    const participantUrl = `${window.location.origin}/join/${meetingId}`;
-
-    const qrUrl = `/qr/${meetingId}`;
-
-    if (qrCode) {
-        qrCode.src = qrUrl;
+    function getQrUrl(mode) {
+        return `/qr/${meetingId}?type=${mode}`;
     }
 
-    if (qrCodeLarge) {
-        qrCodeLarge.src = qrUrl;
+    function updateShareTools() {
+        const shareUrl = getShareUrl(currentShareMode);
+        const qrUrl = getQrUrl(currentShareMode);
+
+        if (participantLinkInput) {
+            participantLinkInput.value = shareUrl;
+        }
+
+        if (joinLink) {
+            joinLink.href = shareUrl;
+            joinLink.style.display =
+                currentShareMode === "cohost" ? "none" : "inline-flex";
+        }
+
+        if (cohostNotice) {
+            cohostNotice.hidden = currentShareMode !== "cohost";
+            cohostNotice.style.display =
+                currentShareMode === "cohost" ? "flex" : "none";
+        }
+
+        if (qrCode) {
+            qrCode.src = qrUrl;
+            qrCode.alt =
+                currentShareMode === "cohost"
+                    ? "Co-host QR code"
+                    : "Participant QR code";
+        }
+
+        if (qrCodeLarge) {
+            qrCodeLarge.src = qrUrl;
+            qrCodeLarge.alt =
+                currentShareMode === "cohost"
+                    ? "Large co-host QR code"
+                    : "Large participant QR code";
+        }
+
+        shareModeButtons.forEach((button) => {
+            button.classList.toggle(
+                "is-active",
+                button.dataset.shareMode === currentShareMode
+            );
+        });
+
+        document
+            .querySelector(".share-mode-toggle")
+            ?.classList.toggle("is-cohost", currentShareMode === "cohost");
+
+        if (shareLinkLabel) {
+            shareLinkLabel.textContent =
+                currentShareMode === "cohost"
+                    ? "Co-host link"
+                    : "Invitation link";
+        }
+
+        if (qrModalCaption) {
+            qrModalCaption.textContent =
+                currentShareMode === "cohost"
+                    ? "Scan to open the co-host dashboard"
+                    : "Scan to join as a participant";
+        }
     }
 
-    if (participantLinkInput && meetingId) {
-        participantLinkInput.value = participantUrl;
-    }
+    shareModeButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            currentShareMode = button.dataset.shareMode;
+            updateShareTools();
+        });
+    });
+
+    updateShareTools();
 
     if (copyLinkButton && participantLinkInput) {
         copyLinkButton.addEventListener("click", async () => {
