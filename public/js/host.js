@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyLinkMessage = document.getElementById("copy-link-message");
     const meetingNameDisplay = document.getElementById("meeting-name-display");
     const createdAtDisplay = document.getElementById("created-at-display");
+    const moderatorCountDisplay = document.getElementById("moderator-count-display");
     const endMeetingButton = document.getElementById("end-meeting-button");
     const qrCode = document.getElementById("qr-code");
     const qrCodeLarge = document.getElementById("qr-code-large");
@@ -30,6 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareLinkLabel = document.getElementById("share-link-label");
     const qrModalCaption = document.getElementById("qr-modal-caption");
     const cohostNotice = document.getElementById("cohost-notice");
+    const leaveDashboardButton = document.getElementById("leave-dashboard-button");
 
     let currentShareMode = "participant";
 
@@ -95,14 +97,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (shareLinkLabel) {
             shareLinkLabel.textContent =
                 currentShareMode === "cohost"
-                    ? "Co-host link"
+                    ? "Moderator link"
                     : "Invitation link";
         }
 
         if (qrModalCaption) {
             qrModalCaption.textContent =
                 currentShareMode === "cohost"
-                    ? "Scan to open the co-host dashboard"
+                    ? "Scan to open the moderator dashboard"
                     : "Scan to join as a participant";
         }
     }
@@ -165,6 +167,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         participantCount.textContent = `${state.participantCount} connected`;
         queueCount.textContent = `${state.queue.length} waiting`;
+
+        moderatorCountDisplay.textContent =
+        `${state.moderatorCount} connected`;
+
+        leaveDashboardButton.hidden = state.moderatorCount <= 1;
 
         participantList.innerHTML = "";
 
@@ -270,7 +277,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         currentSpeaker.textContent = state.currentSpeaker
             ? `${state.currentSpeaker.name} (${state.currentSpeaker.role})`
-            : "Host";
+            : "Moderator";
     });
 
     if (manualParticipantForm) {
@@ -303,6 +310,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirmed) return;
 
         socket.emit("end-meeting");
+    });
+
+    leaveDashboardButton.addEventListener("click", () => {
+        socket.emit("leave-dashboard");
+        window.location.href = "/";
     });
 
     socket.on("meeting-ended", () => {

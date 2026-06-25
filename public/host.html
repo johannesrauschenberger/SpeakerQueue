@@ -13,7 +13,7 @@
 <div class="app-shell">
     <header class="app-header">
         <div>
-            <p class="eyebrow">Host dashboard</p>
+            <p class="eyebrow">Moderator dashboard</p>
             <h1>SpeakerQueue</h1>
         </div>
 
@@ -38,6 +38,11 @@
                     <dt>Created</dt>
                     <dd id="created-at-display"></dd>
                 </div>
+
+                <div>
+                    <dt>Moderators</dt>
+                    <dd id="moderator-count-display">1 connected</dd>
+                </div>
             </dl>
 
             <div class="sharing-tools">
@@ -57,7 +62,7 @@
                         class="share-mode-button"
                         data-share-mode="cohost"
                     >
-                        Co-host
+                        Moderator
                     </button>
                 </div>
                 
@@ -98,9 +103,24 @@
                 <span>Found a bug or have a suggestion? Let us know.</span>
             </a>
 
-            <button id="end-meeting-button" type="button" class="danger-button">
-                End meeting
-            </button>
+            <div class="meeting-actions">
+                <button
+                    id="leave-dashboard-button"
+                    type="button"
+                    class="secondary-button"
+                    hidden
+                >
+                    Leave meeting
+                </button>
+
+                <button
+                    id="end-meeting-button"
+                    type="button"
+                    class="danger-button"
+                >
+                    End meeting
+                </button>
+            </div>
         </section>
 
         <section class="panel speaker-panel">
@@ -108,7 +128,7 @@
                 <h2>Current speaker</h2>
             </div>
 
-            <p id="current-speaker" class="current-speaker">Host</p>
+            <p id="current-speaker" class="current-speaker">Moderator</p>
 
             <button id="next-speaker-button" type="button">
                 Next speaker
@@ -157,12 +177,15 @@
     <div class="modal-backdrop" id="qr-modal-backdrop"></div>
 
     <div class="modal-card">
+        <p id="qr-modal-caption">
+            Scan to join as a participant
+        </p>
+
+        <img id="qr-code-large" alt="Large participant QR code">
+
         <button id="close-qr-button" type="button" class="modal-close">
             Close
         </button>
-
-        <img id="qr-code-large" alt="Large participant QR code">
-        <p id="qr-modal-caption">Scan to join as a participant</p>
     </div>
 </div>
 
