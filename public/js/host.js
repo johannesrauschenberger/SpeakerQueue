@@ -239,4 +239,8 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "/";
     });
 
+    if (window.lucide) {
+        lucide.createIcons();
+    }
+
 });
