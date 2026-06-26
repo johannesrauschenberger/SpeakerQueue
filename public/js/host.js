@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
         speakerTimer.textContent = formatElapsedTime(elapsed);
     }
 
-    setInterval(updateSpeakerTimer, 1000);
+    const speakerTimerInterval = setInterval(updateSpeakerTimer, 1000);
     updateSpeakerTimer();
 
     socket.on("meeting-state", (state) => {

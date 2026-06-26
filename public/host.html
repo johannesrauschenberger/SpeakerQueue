@@ -26,15 +26,6 @@
         <section class="panel meeting-panel">
             <div class="panel-header">
                 <h2>Meeting</h2>
-
-                <button
-                    type="button"
-                    class="help-button"
-                    data-help-button
-                    aria-label="What is SpeakerQueue?"
-                >
-                    ?
-                </button>
             </div>
 
             <dl class="meeting-details">
@@ -103,14 +94,6 @@
 
                 <p id="copy-link-message" class="helper-text"></p>
             </div>
-
-            <a
-                class="feedback-link"
-                href="mailto:johannes@rauschenberger.co.za?subject=SpeakerQueue%20Feedback"
-            >
-                <i data-lucide="mail"></i>
-                <span>Found a bug or have a suggestion? Let us know.</span>
-            </a>
 
             <div class="meeting-actions">
                 <button
@@ -181,6 +164,34 @@
             </form>
         </section>
     </main>
+
+    <footer class="dashboard-footer">
+        <a
+            class="footer-link"
+            href="mailto:johannes@rauschenberger.co.za?subject=SpeakerQueue%20Feedback"
+        >
+            <i data-lucide="mail"></i>
+            Feedback
+        </a>
+
+        <button
+            type="button"
+            class="footer-link"
+            data-help-button
+        >
+            <i data-lucide="circle-help"></i>
+            Help &amp; About
+        </button>
+
+        <button
+            type="button"
+            class="footer-link"
+            data-privacy-button
+        >
+            <i data-lucide="shield-check"></i>
+            Privacy
+        </button>
+    </footer>
 </div>
 
 <div id="qr-modal" class="modal" hidden>
@@ -202,6 +213,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/common.js"></script>
 <script src="/js/help-modal.js"></script>
+<script src="/js/privacy-modal.js"></script>
 <script src="/js/host.js"></script>
 </body>
 </html>
