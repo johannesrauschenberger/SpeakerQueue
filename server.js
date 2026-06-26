@@ -29,6 +29,7 @@ function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
             queue: [],
             currentSpeaker: null,
             hosts: [],
+            speakerLimitMinutes: null,
             ended: false
         };
     }
@@ -44,6 +45,7 @@ function broadcastMeetingState(meetingId) {
         createdAt: meeting.createdAt,
         participantCount: meeting.participants.length,
         moderatorCount: meeting.hosts.length,
+        speakerLimitMinutes: meeting.speakerLimitMinutes,
         participants: meeting.participants.map(participant => ({
             socketId: participant.socketId,
             name: participant.name,
@@ -265,6 +267,26 @@ io.on("connection", (socket) => {
             handRaisedAt: null,
             isManual: true
         });
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("set-speaker-limit", ({ minutes }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+
+        const allowedLimits = [null, 1, 2, 3, 5, 10, 15];
+
+        const parsedMinutes =
+            minutes === null ? null : Number(minutes);
+
+        if (!allowedLimits.includes(parsedMinutes)) return;
+
+        meeting.speakerLimitMinutes = parsedMinutes;
 
         broadcastMeetingState(meetingId);
     });

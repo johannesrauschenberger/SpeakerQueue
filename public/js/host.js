@@ -31,11 +31,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const shareLinkLabel = document.getElementById("share-link-label");
     const qrModalCaption = document.getElementById("qr-modal-caption");
     const cohostNotice = document.getElementById("cohost-notice");
+    const speakerLimitSelect = document.getElementById("speaker-limit-select");
     const leaveDashboardButton = document.getElementById("leave-dashboard-button");
     const speakerTimer = document.getElementById("speaker-timer");
     let activeSpeakerKey = "Moderator";
     let speakerStartedAt = Date.now();
-
+    let currentSpeakerLimitMinutes = null;
+    let moderatorSpeaking = true;
     let currentShareMode = "participant";
 
     function getShareUrl(mode) {
@@ -174,10 +176,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const elapsed = Date.now() - speakerStartedAt;
         speakerTimer.textContent = formatElapsedTime(elapsed);
+
+        speakerTimer.classList.remove(
+            "speaker-timer-warning",
+            "speaker-timer-over"
+        );
+
+        if (!currentSpeakerLimitMinutes || moderatorSpeaking) return;
+
+        const limitMilliseconds = currentSpeakerLimitMinutes * 60 * 1000;
+        const progress = elapsed / limitMilliseconds;
+
+        if (progress >= 1) {
+            speakerTimer.classList.add("speaker-timer-over");
+        } else if (progress >= 0.7) {
+            speakerTimer.classList.add("speaker-timer-warning");
+        }
     }
 
     const speakerTimerInterval = setInterval(updateSpeakerTimer, 1000);
     updateSpeakerTimer();
+
+    if (speakerLimitSelect) {
+        speakerLimitSelect.addEventListener("change", () => {
+            const value = speakerLimitSelect.value;
+
+            socket.emit("set-speaker-limit", {
+                minutes: value === "" ? null : Number(value)
+            });
+        });
+    }
 
     socket.on("meeting-state", (state) => {
         meetingNameDisplay.textContent = state.meetingName;
@@ -309,6 +337,20 @@ document.addEventListener("DOMContentLoaded", () => {
         currentSpeaker.textContent = state.currentSpeaker
             ? `${state.currentSpeaker.name} (${state.currentSpeaker.role})`
             : "Moderator";
+
+        if (speakerLimitSelect) {
+            const incomingValue =
+                state.speakerLimitMinutes === null ? "" : String(state.speakerLimitMinutes);
+
+            if (speakerLimitSelect.value !== incomingValue) {
+                speakerLimitSelect.value = incomingValue;
+            }
+        }
+
+        currentSpeakerLimitMinutes = state.speakerLimitMinutes;
+        updateSpeakerTimer();
+
+        moderatorSpeaking = state.currentSpeaker === null;
     });
 
     if (manualParticipantForm) {

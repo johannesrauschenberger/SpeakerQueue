@@ -954,3 +954,17 @@ dd {
     height: 15px;
     flex-shrink: 0;
 }
+
+.compact-select {
+    max-width: 180px;
+    padding: 7px 9px;
+    font-size: 0.9rem;
+}
+
+.speaker-timer-warning {
+    color: #a86d1d;
+}
+
+.speaker-timer-over {
+    color: var(--danger);
+}
