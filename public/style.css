@@ -911,3 +911,9 @@ dd {
 .help-modal-card button {
     margin-top: 24px;
 }
+
+.speaker-timer {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}

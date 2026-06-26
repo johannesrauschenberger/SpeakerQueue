@@ -32,6 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const qrModalCaption = document.getElementById("qr-modal-caption");
     const cohostNotice = document.getElementById("cohost-notice");
     const leaveDashboardButton = document.getElementById("leave-dashboard-button");
+    const speakerTimer = document.getElementById("speaker-timer");
+    let activeSpeakerKey = "Moderator";
+    let speakerStartedAt = Date.now();
 
     let currentShareMode = "participant";
 
@@ -158,6 +161,24 @@ document.addEventListener("DOMContentLoaded", () => {
         role: "host"
     });
 
+    function formatElapsedTime(milliseconds) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function updateSpeakerTimer() {
+        if (!speakerTimer) return;
+
+        const elapsed = Date.now() - speakerStartedAt;
+        speakerTimer.textContent = formatElapsedTime(elapsed);
+    }
+
+    setInterval(updateSpeakerTimer, 1000);
+    updateSpeakerTimer();
+
     socket.on("meeting-state", (state) => {
         meetingNameDisplay.textContent = state.meetingName;
         document.title = `${state.meetingName} | SpeakerQueue`;
@@ -274,6 +295,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             queueList.appendChild(li);
         });
+
+        const newSpeakerKey = state.currentSpeaker
+            ? `${state.currentSpeaker.name}-${state.currentSpeaker.role}`
+            : "Moderator";
+
+        if (newSpeakerKey !== activeSpeakerKey) {
+            activeSpeakerKey = newSpeakerKey;
+            speakerStartedAt = Date.now();
+            updateSpeakerTimer();
+        }
 
         currentSpeaker.textContent = state.currentSpeaker
             ? `${state.currentSpeaker.name} (${state.currentSpeaker.role})`
