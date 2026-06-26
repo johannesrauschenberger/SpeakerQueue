@@ -229,6 +229,10 @@ a {
     border-bottom: 1px solid var(--line);
     margin-bottom: 16px;
     padding-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    min-height: 32px;
 }
 
 .panel h2 {
@@ -840,4 +844,70 @@ dd {
 
 [hidden] {
     display: none !important;
+}
+
+.landing-title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.help-button {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    line-height: 1;
+    margin-top: -5px;
+}
+
+.help-button:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.help-modal-card {
+    text-align: left;
+}
+
+.help-modal-card h2 {
+    margin: 0 0 16px;
+}
+
+.help-modal-card h3 {
+    margin: 22px 0 10px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.help-modal-card p,
+.help-modal-card li {
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.help-modal-card ol,
+.help-modal-card ul {
+    padding-left: 22px;
+}
+
+.help-modal-note {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.help-modal-card button {
+    margin-top: 24px;
 }
