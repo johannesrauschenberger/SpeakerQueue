@@ -341,7 +341,20 @@ dd {
     }
 
     .meeting-panel {
+        order: 4;
         grid-row: auto;
+    }
+
+    .speaker-panel {
+        order: 1;
+    }
+
+    .queue-panel {
+        order: 2;
+    }
+
+    .participants-panel {
+        order: 3;
     }
 }
 
@@ -1036,4 +1049,47 @@ dd {
 
 .participant-speaking-timer.speaker-timer-over {
     color: var(--danger);
+}
+
+.feedback-form {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.feedback-form label span {
+    color: var(--muted);
+    font-weight: 400;
+}
+
+.feedback-form textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 120px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 10px 11px;
+    background: #fffefa;
+    color: var(--ink);
+    font: inherit;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.feedback-form textarea:focus {
+    outline: 2px solid rgba(47, 79, 79, 0.22);
+    border-color: var(--accent);
+}
+
+.feedback-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.feedback-form-actions button {
+    white-space: nowrap;
+}
+
+.feedback-status {
+    margin: 4px 0 0;
 }
