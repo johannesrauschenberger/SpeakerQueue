@@ -563,7 +563,8 @@ dd {
 .raise-hand-button {
     width: 210px;
     height: 210px;
-
+    position: relative;
+    overflow: visible;
     margin: 0 auto 24px;
     padding: 0;
 
@@ -608,7 +609,16 @@ dd {
     border-color: var(--accent-hover);
 }
 
-.raise-hand-button svg {
+.raise-hand-button.is-speaking {
+    color: white;
+}
+
+.raise-hand-button.is-speaking i,
+.raise-hand-button.is-speaking span {
+    color: white;
+}
+
+.raise-hand-button i svg {
     width: 42px;
     height: 42px;
     stroke-width: 1.8;
@@ -618,6 +628,48 @@ dd {
     font-size: 1rem;
     font-weight: 650;
     line-height: 1.3;
+}
+
+.raise-hand-button > :not(.speaker-progress-ring) {
+    position: relative;
+    z-index: 1;
+}
+
+.speaker-progress-ring-fill {
+    fill: none;
+    stroke: white;
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 250ms linear, stroke 150ms ease;
+}
+
+.raise-hand-button .speaker-progress-ring {
+    position: absolute;
+    inset: -8px;
+    width: calc(100% + 16px);
+    height: calc(100% + 16px);
+    pointer-events: none;
+    transform: rotate(-90deg);
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+
+.raise-hand-button.has-timer .speaker-progress-ring {
+    opacity: 1;
+}
+
+.speaker-progress-ring-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.18);
+    stroke-width: 4;
+}
+
+.raise-hand-button.timer-warning .speaker-progress-ring-fill {
+    stroke: #a86d1d;
+}
+
+.raise-hand-button.timer-over .speaker-progress-ring-fill {
+    stroke: var(--danger);
 }
 
 @media (max-width: 520px) {
@@ -966,5 +1018,22 @@ dd {
 }
 
 .speaker-timer-over {
+    color: var(--danger);
+}
+
+.participant-speaking-timer {
+    display: inline;
+    color: var(--muted);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+}
+
+.participant-speaking-timer.speaker-timer-warning {
+    color: #a86d1d;
+}
+
+.participant-speaking-timer.speaker-timer-over {
     color: var(--danger);
 }

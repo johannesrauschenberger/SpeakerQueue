@@ -17,6 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const participantMeetingName = document.getElementById("participant-meeting-name");
     const activeMeetingName = document.getElementById("active-meeting-name");
     const participantHelpText = document.getElementById("participant-help-text");
+    const speakerProgressRing = document.getElementById("speaker-progress-ring-fill");
+
+    const participantRoleDisplay = document.getElementById("participant-role-display");
+    const participantSpeakingTimer = document.getElementById("participant-speaking-timer");
+
+    let speakerLimitMinutes = null;
+    let currentSpeakerStartedAt = null;
+    let participantIsSpeaking = false;
 
     let handRaised = false;
     let mySocketId = null;
@@ -109,8 +117,110 @@ document.addEventListener("DOMContentLoaded", () => {
         releaseWakeLock();
     });
 
+    function setSpeakerProgress(progress) {
+        if (!speakerProgressRing) return;
+
+        const radius = 104;
+        const circumference = 2 * Math.PI * radius;
+        const clampedProgress = Math.max(0, Math.min(progress, 1));
+
+        speakerProgressRing.style.strokeDasharray = `${circumference}`;
+        speakerProgressRing.style.strokeDashoffset =
+            `${circumference * (1 - clampedProgress)}`;
+    }
+
+    function formatElapsedTime(milliseconds) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function updateParticipantTimerRing() {
+        if (!speakerProgressRing) return;
+
+        if (!participantIsSpeaking || !currentSpeakerStartedAt) {
+            raiseHandButton.classList.remove(
+                "has-timer",
+                "timer-warning",
+                "timer-over"
+            );
+
+            setSpeakerProgress(0);
+
+            if (participantSpeakingTimer) {
+                participantSpeakingTimer.textContent = "";
+                participantSpeakingTimer.classList.remove(
+                    "speaker-timer-warning",
+                    "speaker-timer-over"
+                );
+                participantSpeakingTimer.hidden = true;
+            }
+
+            return;
+        }
+
+        const elapsed = Date.now() - currentSpeakerStartedAt;
+
+        if (participantSpeakingTimer) {
+            participantSpeakingTimer.hidden = false;
+            participantSpeakingTimer.textContent = ` · ${formatElapsedTime(elapsed)}`;
+            participantSpeakingTimer.classList.remove(
+                "speaker-timer-warning",
+                "speaker-timer-over"
+            );
+        }
+
+        if (!speakerLimitMinutes) {
+            raiseHandButton.classList.remove(
+                "has-timer",
+                "timer-warning",
+                "timer-over"
+            );
+
+            setSpeakerProgress(0);
+            return;
+        }
+
+        const limitMilliseconds = speakerLimitMinutes * 60 * 1000;
+        const progress = elapsed / limitMilliseconds;
+
+        raiseHandButton.classList.add("has-timer");
+
+        raiseHandButton.classList.toggle(
+            "timer-warning",
+            progress >= 0.7 && progress < 1
+        );
+
+        raiseHandButton.classList.toggle(
+            "timer-over",
+            progress >= 1
+        );
+
+        if (participantSpeakingTimer) {
+            participantSpeakingTimer.classList.toggle(
+                "speaker-timer-warning",
+                progress >= 0.7 && progress < 1
+            );
+
+            participantSpeakingTimer.classList.toggle(
+                "speaker-timer-over",
+                progress >= 1
+            );
+        }
+
+        setSpeakerProgress(progress);
+    }
+
+    setInterval(updateParticipantTimerRing, 1000);
+    setSpeakerProgress(0);
+
     socket.on("meeting-state", (state) => {
         document.title = `${state.meetingName} | SpeakerQueue`;
+
+        speakerLimitMinutes = state.speakerLimitMinutes;
+        currentSpeakerStartedAt = state.currentSpeakerStartedAt;
 
         participantMeetingName.textContent = state.meetingName;
         activeMeetingName.textContent = state.meetingName;
@@ -120,6 +230,9 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         if (!me) return;
+
+        participantIsSpeaking = me.state === "speaking";
+        updateParticipantTimerRing();
 
         raiseHandButton.classList.remove("is-raised", "is-speaking");
 

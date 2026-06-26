@@ -40,6 +40,8 @@
 
         <p class="joined-as">
             Joined as <strong id="participant-name"></strong>
+            <span id="participant-role-display"></span>
+            <span id="participant-speaking-timer" class="participant-speaking-timer">00:00</span>
         </p>
 
         <div id="participant-status" class="participant-status status-connected">
@@ -47,7 +49,25 @@
         </div>
 
         <button id="raise-hand-button" class="raise-hand-button" type="button">
+            <svg class="speaker-progress-ring" viewBox="0 0 220 220" aria-hidden="true">
+                <circle
+                    class="speaker-progress-ring-bg"
+                    cx="110"
+                    cy="110"
+                    r="104">
+                </circle>
+
+                <circle
+                    id="speaker-progress-ring-fill"
+                    class="speaker-progress-ring-fill"
+                    cx="110"
+                    cy="110"
+                    r="104">
+                </circle>
+            </svg>
+
             <i data-lucide="hand"></i>
+
             <span id="raise-hand-label">
                 Raise hand
             </span>

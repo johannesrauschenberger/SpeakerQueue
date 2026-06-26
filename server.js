@@ -28,6 +28,8 @@ function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
             participants: [],
             queue: [],
             currentSpeaker: null,
+            currentSpeakerStartedAt: Date.now(),
+            speakerLog: [],
             hosts: [],
             speakerLimitMinutes: null,
             ended: false
@@ -46,6 +48,7 @@ function broadcastMeetingState(meetingId) {
         participantCount: meeting.participants.length,
         moderatorCount: meeting.hosts.length,
         speakerLimitMinutes: meeting.speakerLimitMinutes,
+        currentSpeakerStartedAt: meeting.currentSpeakerStartedAt,
         participants: meeting.participants.map(participant => ({
             socketId: participant.socketId,
             name: participant.name,
@@ -119,6 +122,22 @@ app.get("/qr/:meetingId", async (req, res) => {
     }
 });
 
+function closeCurrentSpeakerLog(meeting) {
+    if (!meeting.currentSpeaker || !meeting.currentSpeakerStartedAt) return;
+
+    const endedAt = Date.now();
+
+    meeting.speakerLog.push({
+        name: meeting.currentSpeaker.name,
+        role: meeting.currentSpeaker.role,
+        startedAt: meeting.currentSpeakerStartedAt,
+        endedAt,
+        durationSeconds: Math.round(
+            (endedAt - meeting.currentSpeakerStartedAt) / 1000
+        )
+    });
+}
+
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
@@ -190,7 +209,9 @@ io.on("connection", (socket) => {
         meeting.queue = meeting.queue.filter(socketId => socketId !== socket.id);
 
         if (meeting.currentSpeaker?.socketId === socket.id) {
+            closeCurrentSpeakerLog(meeting);
             meeting.currentSpeaker = null;
+            meeting.currentSpeakerStartedAt = Date.now();
         }
 
         broadcastMeetingState(meetingId);
@@ -203,6 +224,8 @@ io.on("connection", (socket) => {
         const meeting = getOrCreateMeeting(meetingId);
 
         if (meeting.currentSpeaker) {
+            closeCurrentSpeakerLog(meeting);
+
             const previousSpeaker = meeting.participants.find(
                 participant => participant.socketId === meeting.currentSpeaker.socketId
             );
@@ -213,6 +236,7 @@ io.on("connection", (socket) => {
             }
 
             meeting.currentSpeaker = null;
+            meeting.currentSpeakerStartedAt = Date.now();
         }
 
         const nextSocketId = meeting.queue.shift();
@@ -238,6 +262,8 @@ io.on("connection", (socket) => {
             name: nextParticipant.name,
             role: nextParticipant.role
         };
+
+        meeting.currentSpeakerStartedAt = Date.now();
 
         broadcastMeetingState(meetingId);
     });
@@ -306,7 +332,9 @@ io.on("connection", (socket) => {
         );
 
         if (meeting.currentSpeaker?.socketId === socket.id) {
+            closeCurrentSpeakerLog(meeting);
             meeting.currentSpeaker = null;
+            meeting.currentSpeakerStartedAt = Date.now();
         }
 
         socket.data.role = "viewer";
@@ -340,6 +368,11 @@ io.on("connection", (socket) => {
         if (!meetingId || role !== "host") return;
 
         const meeting = getOrCreateMeeting(meetingId);
+
+        if (meeting.currentSpeaker) {
+            closeCurrentSpeakerLog(meeting);
+        }
+
         meeting.ended = true;
 
         io.to(meetingId).emit("meeting-ended");
@@ -436,7 +469,9 @@ io.on("connection", (socket) => {
         );
 
         if (meeting.currentSpeaker?.socketId === participantId) {
+            closeCurrentSpeakerLog(meeting);
             meeting.currentSpeaker = null;
+            meeting.currentSpeakerStartedAt = Date.now();
         }
 
         io.to(participantId).emit("removed-from-meeting");
@@ -467,9 +502,11 @@ io.on("connection", (socket) => {
                 socketId => socketId !== socket.id
             );
 
-            if (meeting.currentSpeaker?.socketId === socket.id) {
-                meeting.currentSpeaker = null;
-            }
+        if (meeting.currentSpeaker?.socketId === socket.id) {
+            closeCurrentSpeakerLog(meeting);
+            meeting.currentSpeaker = null;
+            meeting.currentSpeakerStartedAt = Date.now();
+        }
         }
 
         broadcastMeetingState(meetingId);
