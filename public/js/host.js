@@ -39,10 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentSpeakerLimitMinutes = null;
     let moderatorSpeaking = true;
     let currentShareMode = "participant";
+    const moderatorPasswordDisplay = document.getElementById("moderator-password-display");
+    const togglePasswordButton = document.getElementById("toggle-password-button");
+    let moderatorKey = null;
 
     function getShareUrl(mode) {
         if (mode === "cohost") {
-            return `${window.location.origin}/host/${meetingId}`;
+            const keyParam = moderatorKey ? `?key=${moderatorKey}` : "";
+            return `${window.location.origin}/host/${meetingId}${keyParam}`;
         }
 
         return `${window.location.origin}/join/${meetingId}`;
@@ -114,6 +118,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    if (togglePasswordButton && moderatorPasswordDisplay) {
+        togglePasswordButton.addEventListener("click", () => {
+            const isHidden = moderatorPasswordDisplay.type === "password";
+
+            moderatorPasswordDisplay.type = isHidden ? "text" : "password";
+            togglePasswordButton.setAttribute(
+                "aria-label",
+                isHidden ? "Hide moderator password" : "Show moderator password"
+            );
+
+            togglePasswordButton.innerHTML = isHidden
+                ? '<i data-lucide="eye-off"></i>'
+                : '<i data-lucide="eye"></i>';
+
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        });
+    }
+
     shareModeButtons.forEach((button) => {
         button.addEventListener("click", () => {
             currentShareMode = button.dataset.shareMode;
@@ -174,6 +198,17 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateSpeakerTimer() {
         if (!speakerTimer) return;
 
+        if (!currentSpeakerLimitMinutes) {
+            speakerTimer.hidden = true;
+            speakerTimer.classList.remove(
+                "speaker-timer-warning",
+                "speaker-timer-over"
+            );
+            return;
+        }
+
+        speakerTimer.hidden = false;
+
         const elapsed = Date.now() - speakerStartedAt;
         speakerTimer.textContent = formatElapsedTime(elapsed);
 
@@ -210,6 +245,14 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("meeting-state", (state) => {
         meetingNameDisplay.textContent = state.meetingName;
         document.title = `${state.meetingName} | SpeakerQueue`;
+
+        moderatorKey = state.moderatorKey;
+        updateShareTools();
+
+        if (moderatorPasswordDisplay) {
+            moderatorPasswordDisplay.value =
+                state.moderatorPassword || "Not generated yet";
+        }
 
         const createdAt = new Date(state.createdAt);
         createdAtDisplay.textContent = `Created: ${createdAt.toLocaleString()}`;

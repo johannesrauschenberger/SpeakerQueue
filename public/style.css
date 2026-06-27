@@ -249,11 +249,11 @@ a {
 
 .meeting-details {
     display: grid;
-    gap: 14px;
-    margin: 0 0 22px;
+    gap: 11px;
+    margin: 0 0 18px;
 }
 
-.meeting-details div {
+.meeting-details > div {
     display: grid;
     gap: 3px;
 }
@@ -383,7 +383,7 @@ dd {
     background: white;
     padding: 10px;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
 }
 
 .qr-frame img {
@@ -447,6 +447,7 @@ dd {
     display: grid;
     place-items: center;
     padding: 24px;
+    overflow-y: auto;
 }
 
 .modal-backdrop {
@@ -459,6 +460,8 @@ dd {
     position: relative;
     z-index: 1;
     width: min(520px, 100%);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
     background: var(--panel);
     border: 1px solid var(--line-strong);
     padding: 24px;
@@ -480,6 +483,17 @@ dd {
 
 .modal-close {
     margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+    .modal {
+        align-items: start;
+        padding: 18px;
+    }
+
+    .modal-card {
+        max-height: calc(100vh - 36px);
+    }
 }
 
 /* Participant view */
@@ -1092,4 +1106,44 @@ dd {
 
 .feedback-status {
     margin: 4px 0 0;
+}
+
+.password-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    max-width: 220px;
+}
+
+.password-display input {
+    min-width: 0;
+    flex: 1;
+    padding: 7px 9px;
+    font-size: 0.9rem;
+}
+
+.password-toggle-button {
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    background: transparent;
+    color: var(--muted);
+}
+
+.password-toggle-button:hover {
+    background: transparent;
+    color: var(--accent);
+}
+
+.password-toggle-button svg {
+    width: 16px;
+    height: 16px;
 }

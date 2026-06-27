@@ -19,6 +19,14 @@ function generateMeetingId() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
+function generateModeratorPassword() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+function generateModeratorKey() {
+    return Math.random().toString(36).substring(2, 14);
+}
+
 function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
     if (!meetings[meetingId]) {
         meetings[meetingId] = {
@@ -32,6 +40,8 @@ function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
             speakerLog: [],
             hosts: [],
             speakerLimitMinutes: null,
+            moderatorPassword: generateModeratorPassword(),
+            moderatorKey: generateModeratorKey(),
             ended: false
         };
     }
@@ -49,6 +59,8 @@ function broadcastMeetingState(meetingId) {
         moderatorCount: meeting.hosts.length,
         speakerLimitMinutes: meeting.speakerLimitMinutes,
         currentSpeakerStartedAt: meeting.currentSpeakerStartedAt,
+        moderatorPassword: meeting.moderatorPassword,
+        moderatorKey: meeting.moderatorKey,
         participants: meeting.participants.map(participant => ({
             socketId: participant.socketId,
             name: participant.name,
