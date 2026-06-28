@@ -27,6 +27,14 @@ function generateModeratorKey() {
     return Math.random().toString(36).substring(2, 14);
 }
 
+function generateCreatorToken() {
+    return Math.random().toString(36).substring(2, 18);
+}
+
+function generateModeratorSessionToken() {
+    return Math.random().toString(36).substring(2, 24);
+}
+
 function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
     if (!meetings[meetingId]) {
         meetings[meetingId] = {
@@ -42,6 +50,8 @@ function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
             speakerLimitMinutes: null,
             moderatorPassword: generateModeratorPassword(),
             moderatorKey: generateModeratorKey(),
+            creatorToken: generateCreatorToken(),
+            moderatorSessions: [],
             ended: false
         };
     }
@@ -95,12 +105,21 @@ app.post("/meetings", (req, res) => {
     const meetingId = generateMeetingId();
     const meetingName = req.body.meetingName?.trim() || "Untitled Meeting";
 
-    getOrCreateMeeting(meetingId, meetingName);
+    const meeting = getOrCreateMeeting(meetingId, meetingName);
 
-    res.redirect(`/host/${meetingId}`);
+    res.redirect(`/host/${meetingId}?key=${meeting.moderatorKey}&creator=${meeting.creatorToken}`);
 });
 
 app.get("/host/:meetingId", (req, res) => {
+    const meetingId = req.params.meetingId;
+    const suppliedKey = req.query.key;
+
+    const meeting = meetings[meetingId];
+
+    if (!meeting || suppliedKey !== meeting.moderatorKey) {
+        return res.redirect("/");
+    }
+
     res.sendFile(path.join(__dirname, "public", "host.html"));
 });
 
@@ -153,8 +172,55 @@ function closeCurrentSpeakerLog(meeting) {
 io.on("connection", (socket) => {
     console.log("A user connected:", socket.id);
 
+    socket.on("join-moderator", (
+        { meetingId, moderatorKey, moderatorPassword, creatorToken, sessionToken },
+        callback
+    ) => {
+        const meeting = meetings[meetingId];
+
+        if (!meeting) {
+            callback?.({ ok: false, message: "Meeting not found." });
+            return;
+        }
+
+        const validKey = moderatorKey === meeting.moderatorKey;
+        const validPassword = moderatorPassword === meeting.moderatorPassword;
+        const validCreatorToken = creatorToken === meeting.creatorToken;
+        const validSessionToken =
+            typeof sessionToken === "string" &&
+            meeting.moderatorSessions.includes(sessionToken);
+
+        if (!validKey || (!validPassword && !validCreatorToken && !validSessionToken)) {
+            callback?.({ ok: false, message: "Invalid moderator credentials." });
+            return;
+        }
+
+        let newSessionToken = sessionToken;
+
+        if (!validSessionToken) {
+            newSessionToken = generateModeratorSessionToken();
+            meeting.moderatorSessions.push(newSessionToken);
+        }
+
+        socket.join(meetingId);
+        socket.data.meetingId = meetingId;
+        socket.data.role = "host";
+
+        if (!meeting.hosts.includes(socket.id)) {
+            meeting.hosts.push(socket.id);
+        }
+
+        callback?.({
+            ok: true,
+            sessionToken: newSessionToken
+        });
+
+        broadcastMeetingState(meetingId);
+    });
+
     socket.on("join-meeting", ({ meetingId, role, name, participantRole }) => {
         const meeting = getOrCreateMeeting(meetingId);
+        if (role === "host") return;
 
         socket.join(meetingId);
         socket.data.meetingId = meetingId;

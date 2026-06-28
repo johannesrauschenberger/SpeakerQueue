@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     const socket = io();
-
+    const urlParams = new URLSearchParams(window.location.search);
+    const suppliedModeratorKey = urlParams.get("key");
+    const suppliedCreatorToken = urlParams.get("creator");
+    const moderatorAuthStorageKey = `speakerqueue-moderator-auth-${meetingId}`;
     const joinLink = document.getElementById("join-link");
     const participantCount = document.getElementById("participant-count");
     const participantList = document.getElementById("participant-list");
@@ -118,6 +121,112 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function createModeratorAuthModal() {
+        const modal = document.createElement("div");
+        modal.id = "moderator-auth-modal";
+        modal.className = "modal";
+
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+
+            <div class="modal-card help-modal-card">
+                <h2>Moderator access</h2>
+
+                <p>
+                    Enter the moderator password to open the dashboard for this meeting.
+                </p>
+
+                <form id="moderator-auth-form" class="feedback-form">
+                    <label for="moderator-auth-password">Moderator password</label>
+
+                    <input
+                        id="moderator-auth-password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                    <p id="moderator-auth-status" class="helper-text" aria-live="polite"></p>
+
+                    <button type="submit">
+                        Continue
+                    </button>
+                </form>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    function authenticateModerator({ password = null, creatorToken = null, sessionToken = null } = {}) {
+        return new Promise((resolve) => {
+            socket.emit("join-moderator", {
+                meetingId,
+                moderatorKey: suppliedModeratorKey,
+                moderatorPassword: password,
+                creatorToken,
+                sessionToken
+            }, resolve);
+        });
+    }
+
+    async function joinModeratorDashboard() {
+        const storedSessionToken = sessionStorage.getItem(moderatorAuthStorageKey);
+
+        if (storedSessionToken) {
+            const response = await authenticateModerator({
+                sessionToken: storedSessionToken
+            });
+
+            if (response?.ok) return;
+
+            sessionStorage.removeItem(moderatorAuthStorageKey);
+        }
+
+        if (suppliedCreatorToken) {
+            const response = await authenticateModerator({
+                creatorToken: suppliedCreatorToken
+            });
+
+            if (response?.ok) {
+                sessionStorage.setItem(moderatorAuthStorageKey, response.sessionToken);
+
+                const cleanUrl = `${window.location.origin}/host/${meetingId}?key=${suppliedModeratorKey}`;
+                window.history.replaceState({}, "", cleanUrl);
+
+                return;
+            }
+        }
+
+        const modal = createModeratorAuthModal();
+        const form = modal.querySelector("#moderator-auth-form");
+        const passwordInput = modal.querySelector("#moderator-auth-password");
+        const status = modal.querySelector("#moderator-auth-status");
+
+        passwordInput.focus();
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            status.textContent = "Checking password...";
+
+            const response = await authenticateModerator({
+                password: passwordInput.value.trim()
+            });
+
+            if (!response?.ok) {
+                status.textContent = "Invalid password. Please try again.";
+                return;
+            }
+
+            sessionStorage.setItem(moderatorAuthStorageKey, response.sessionToken);
+            modal.remove();
+        });
+    }
+
+    joinModeratorDashboard();
+
     if (togglePasswordButton && moderatorPasswordDisplay) {
         togglePasswordButton.addEventListener("click", () => {
             const isHidden = moderatorPasswordDisplay.type === "password";
@@ -181,11 +290,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (meetingIdDisplay && meetingId) {
         meetingIdDisplay.textContent = meetingId;
     }
-
-    socket.emit("join-meeting", {
-        meetingId,
-        role: "host"
-    });
 
     function formatElapsedTime(milliseconds) {
         const totalSeconds = Math.floor(milliseconds / 1000);
