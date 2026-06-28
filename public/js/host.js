@@ -38,6 +38,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const speakerLimitSelect = document.getElementById("speaker-limit-select");
     const leaveDashboardButton = document.getElementById("leave-dashboard-button");
     const speakerTimer = document.getElementById("speaker-timer");
+    const agendaPanel = document.getElementById("agenda-panel");
+    const agendaTimer = document.getElementById("agenda-timer");
+    const agendaCurrentTitle = document.getElementById("agenda-current-title");
+    const agendaCurrentMeta = document.getElementById("agenda-current-meta");
+    const previousAgendaButton = document.getElementById("previous-agenda-button");
+    const nextAgendaButton = document.getElementById("next-agenda-button");
+    const agendaEmptyState = document.getElementById("agenda-empty-state");
+    const agendaCurrentView = document.getElementById("agenda-current-view");
+    const addAgendaButton = document.getElementById("add-agenda-button");
+    const editAgendaButton = document.getElementById("edit-agenda-button");
+    const agendaEditor = document.getElementById("agenda-editor");
+    const dashboardAgendaRows = document.getElementById("dashboard-agenda-rows");
+    const cancelAgendaButton = document.getElementById("cancel-agenda-button");
+    let currentAgenda = [];
+    let currentAgendaIndex = null;
+    let currentAgendaStartedAt = null;
     let activeSpeakerKey = "Moderator";
     let speakerStartedAt = Date.now();
     let currentSpeakerLimitMinutes = null;
@@ -259,9 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? '<i data-lucide="eye-off"></i>'
                 : '<i data-lucide="eye"></i>';
 
-            if (window.lucide) {
-                lucide.createIcons();
-            }
+            renderLucideIcons();
         });
     }
 
@@ -302,6 +316,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (qrModalBackdrop && qrModal) {
         qrModalBackdrop.addEventListener("click", () => {
             qrModal.hidden = true;
+        });
+    }
+
+    if (addAgendaButton) {
+        addAgendaButton.addEventListener("click", openAgendaEditor);
+    }
+
+    if (editAgendaButton) {
+        editAgendaButton.addEventListener("click", openAgendaEditor);
+    }
+
+    if (cancelAgendaButton) {
+        cancelAgendaButton.addEventListener("click", closeAgendaEditor);
+    }
+
+    if (agendaEditor) {
+        agendaEditor.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            socket.emit("set-agenda", {
+                agenda: getDashboardAgendaData()
+            });
+
+            closeAgendaEditor();
         });
     }
 
@@ -353,6 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const speakerTimerInterval = setInterval(updateSpeakerTimer, 1000);
     updateSpeakerTimer();
+    setInterval(updateAgendaPanel, 1000);
 
     if (speakerLimitSelect) {
         speakerLimitSelect.addEventListener("change", () => {
@@ -362,6 +401,220 @@ document.addEventListener("DOMContentLoaded", () => {
                 minutes: value === "" ? null : Number(value)
             });
         });
+    }
+
+    function updateAgendaPanel() {
+        if (!agendaPanel) return;
+
+        if (agendaEditor && !agendaEditor.hidden) {
+            agendaEmptyState.hidden = true;
+            agendaCurrentView.hidden = true;
+            agendaTimer.hidden = true;
+            return;
+        }
+
+        const hasAgenda = currentAgenda.length > 0;
+
+        agendaEmptyState.hidden = hasAgenda;
+        agendaCurrentView.hidden = !hasAgenda;
+
+        if (!hasAgenda || currentAgendaIndex === null) {
+            agendaTimer.hidden = true;
+            agendaTimer.classList.remove("speaker-timer-warning", "speaker-timer-over");
+            return;
+        }
+
+        const currentItem = currentAgenda[currentAgendaIndex];
+
+        agendaCurrentTitle.textContent = currentItem.title;
+
+        agendaCurrentMeta.textContent =
+            `Item ${currentAgendaIndex + 1} of ${currentAgenda.length}` +
+            (currentItem.targetMinutes ? ` · ${currentItem.targetMinutes} min guidance` : "");
+
+        previousAgendaButton.disabled = currentAgendaIndex <= 0;
+        nextAgendaButton.disabled = currentAgendaIndex >= currentAgenda.length - 1;
+
+        if (!currentItem.targetMinutes || !currentAgendaStartedAt) {
+            agendaTimer.hidden = true;
+            agendaTimer.classList.remove("speaker-timer-warning", "speaker-timer-over");
+            return;
+        }
+
+        agendaTimer.hidden = false;
+
+        const elapsed = Date.now() - currentAgendaStartedAt;
+        const limitMilliseconds = currentItem.targetMinutes * 60 * 1000;
+        const progress = elapsed / limitMilliseconds;
+
+        agendaTimer.textContent = formatElapsedTime(elapsed);
+        agendaTimer.classList.toggle("speaker-timer-warning", progress >= 0.7 && progress < 1);
+        agendaTimer.classList.toggle("speaker-timer-over", progress >= 1);
+    }
+
+    function createDashboardAgendaRow(title = "", targetMinutes = "") {
+        const row = document.createElement("div");
+        row.className = "agenda-row";
+
+        row.innerHTML = `
+            <span class="agenda-row-number"></span>
+
+            <input
+                class="agenda-title-input"
+                type="text"
+                placeholder="Agenda item"
+            >
+
+            <input
+                class="agenda-time-input"
+                type="number"
+                min="1"
+                max="999"
+                placeholder="min"
+                inputmode="numeric"
+            >
+
+            <button
+                type="button"
+                class="agenda-delete-button"
+                aria-label="Remove agenda item"
+            >
+                ×
+            </button>
+        `;
+
+        const titleInput = row.querySelector(".agenda-title-input");
+        const timeInput = row.querySelector(".agenda-time-input");
+
+        const deleteButton = row.querySelector(".agenda-delete-button");
+
+        deleteButton.addEventListener("click", () => {
+            const rows = row.parentElement.querySelectorAll(".agenda-row");
+
+            if (rows.length === 1) {
+                titleInput.value = "";
+                timeInput.value = "";
+                titleInput.focus();
+                return;
+            }
+
+            row.remove();
+
+            updateDashboardAgendaNumbers();  // host.js
+
+            ensureDashboardTrailingAgendaRow();  // host.js
+        });
+
+        titleInput.value = title;
+        timeInput.value = targetMinutes || "";
+
+        titleInput.addEventListener("input", handleDashboardAgendaInput);
+        timeInput.addEventListener("input", handleDashboardAgendaInput);
+
+        titleInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+
+            event.preventDefault();
+            ensureDashboardTrailingAgendaRow();
+
+            const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
+            const currentIndex = rows.indexOf(row);
+            rows[currentIndex + 1]
+                ?.querySelector(".agenda-title-input")
+                ?.focus();
+        });
+
+        return row;
+    }
+
+    function updateDashboardAgendaNumbers() {
+        const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
+
+        rows.forEach((row, index) => {
+            row.querySelector(".agenda-row-number").textContent = `${index + 1}.`;
+        });
+    }
+
+    function ensureDashboardTrailingAgendaRow() {
+        const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
+        const lastRow = rows[rows.length - 1];
+
+        if (!lastRow) {
+            dashboardAgendaRows.appendChild(createDashboardAgendaRow());
+            updateDashboardAgendaNumbers();
+            return;
+        }
+
+        const lastTitle = lastRow.querySelector(".agenda-title-input").value.trim();
+        const lastTime = lastRow.querySelector(".agenda-time-input").value.trim();
+
+        if (lastTitle || lastTime) {
+            dashboardAgendaRows.appendChild(createDashboardAgendaRow());
+            updateDashboardAgendaNumbers();
+        }
+    }
+
+    function removeDashboardExtraEmptyAgendaRows() {
+        const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
+
+        rows.forEach((row, index) => {
+            const isLast = index === rows.length - 1;
+            const title = row.querySelector(".agenda-title-input").value.trim();
+            const time = row.querySelector(".agenda-time-input").value.trim();
+
+            if (!isLast && !title && !time) {
+                row.remove();
+            }
+        });
+
+        updateDashboardAgendaNumbers();
+    }
+
+    function handleDashboardAgendaInput() {
+        ensureDashboardTrailingAgendaRow();
+        removeDashboardExtraEmptyAgendaRows();
+    }
+
+    function getDashboardAgendaData() {
+        return [...dashboardAgendaRows.querySelectorAll(".agenda-row")]
+            .map((row) => {
+                const title = row.querySelector(".agenda-title-input").value.trim();
+                const targetMinutesRaw = row.querySelector(".agenda-time-input").value;
+
+                return {
+                    title,
+                    targetMinutes: targetMinutesRaw ? Number(targetMinutesRaw) : null
+                };
+            })
+            .filter(item => item.title);
+    }
+
+    function openAgendaEditor() {
+        dashboardAgendaRows.innerHTML = "";
+
+        if (currentAgenda.length > 0) {
+            currentAgenda.forEach((item) => {
+                dashboardAgendaRows.appendChild(
+                    createDashboardAgendaRow(item.title, item.targetMinutes)
+                );
+            });
+        }
+
+        ensureDashboardTrailingAgendaRow();
+        updateDashboardAgendaNumbers();
+
+        agendaEmptyState.hidden = true;
+        agendaCurrentView.hidden = true;
+        agendaEditor.hidden = false;
+
+        dashboardAgendaRows
+            .querySelector(".agenda-title-input")
+            ?.focus();
+    }
+
+    function closeAgendaEditor() {
+        agendaEditor.hidden = true;
+        updateAgendaPanel();
     }
 
     socket.on("meeting-state", (state) => {
@@ -375,6 +628,11 @@ document.addEventListener("DOMContentLoaded", () => {
             moderatorPasswordDisplay.value =
                 state.moderatorPassword || "Not generated yet";
         }
+
+        currentAgenda = state.agenda || [];
+        currentAgendaIndex = state.currentAgendaIndex;
+        currentAgendaStartedAt = state.currentAgendaStartedAt;
+        updateAgendaPanel();
 
         const createdAt = new Date(state.createdAt);
         createdAtDisplay.textContent = `Created: ${createdAt.toLocaleString()}`;
@@ -541,6 +799,18 @@ document.addEventListener("DOMContentLoaded", () => {
     nextSpeakerButton.addEventListener("click", () => {
         socket.emit("next-speaker");
     });
+
+    if (previousAgendaButton) {
+        previousAgendaButton.addEventListener("click", () => {
+            socket.emit("previous-agenda-item");
+        });
+    }
+
+    if (nextAgendaButton) {
+        nextAgendaButton.addEventListener("click", () => {
+            socket.emit("next-agenda-item");
+        });
+    }
 
     endMeetingButton.addEventListener("click", () => {
         const confirmed = confirm("End this meeting for everyone?");

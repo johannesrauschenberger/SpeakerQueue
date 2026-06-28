@@ -22,135 +22,182 @@
         </div>
     </header>
 
-    <main class="dashboard-grid">
-        <section class="panel meeting-panel">
-            <div class="panel-header">
-                <h2>Meeting</h2>
+<main class="dashboard-grid">
+    <section class="panel meeting-panel">
+        <div class="panel-header">
+            <h2>Meeting</h2>
+        </div>
+
+        <dl class="meeting-details">
+            <div>
+                <dt>Meeting ID</dt>
+                <dd id="meeting-id-display"></dd>
             </div>
 
-            <dl class="meeting-details">
-                <div>
-                    <dt>Meeting ID</dt>
-                    <dd id="meeting-id-display"></dd>
-                </div>
+            <div>
+                <dt>Created</dt>
+                <dd id="created-at-display"></dd>
+            </div>
 
-                <div>
-                    <dt>Created</dt>
-                    <dd id="created-at-display"></dd>
-                </div>
+            <div>
+                <dt>Moderators</dt>
+                <dd id="moderator-count-display">1 connected</dd>
+            </div>
 
-                <div>
-                    <dt>Moderators</dt>
-                    <dd id="moderator-count-display">1 connected</dd>
-                </div>
+            <div>
+                <dt>Time guidance</dt>
+                <dd>
+                    <select id="speaker-limit-select" class="compact-select">
+                        <option value="">No limit</option>
+                        <option value="1">1 minute</option>
+                        <option value="2">2 minutes</option>
+                        <option value="3">3 minutes</option>
+                        <option value="5">5 minutes</option>
+                        <option value="10">10 minutes</option>
+                        <option value="15">15 minutes</option>
+                    </select>
+                </dd>
+            </div>
 
-                <div>
-                    <dt>Time guidance</dt>
-                    <dd>
-                        <select id="speaker-limit-select" class="compact-select">
-                            <option value="">No limit</option>
-                            <option value="1">1 minute</option>
-                            <option value="2">2 minutes</option>
-                            <option value="3">3 minutes</option>
-                            <option value="5">5 minutes</option>
-                            <option value="10">10 minutes</option>
-                            <option value="15">15 minutes</option>
-                        </select>
-                    </dd>
-                </div>
+            <div>
+                <dt>Moderator password</dt>
+                <dd>
+                    <div class="password-display">
+                        <input
+                            id="moderator-password-display"
+                            type="password"
+                            value="Not generated yet"
+                            readonly
+                        >
 
-                <div>
-                    <dt>Moderator password</dt>
-                    <dd>
-                        <div class="password-display">
-                            <input
-                                id="moderator-password-display"
-                                type="password"
-                                value="Not generated yet"
-                                readonly
-                            >
+                        <button
+                            id="toggle-password-button"
+                            type="button"
+                            class="password-toggle-button"
+                            aria-label="Show moderator password"
+                        >
+                            <i data-lucide="eye"></i>
+                        </button>
+                    </div>
+                </dd>
+            </div>
+        </dl>
 
-                            <button
-                                id="toggle-password-button"
-                                type="button"
-                                class="password-toggle-button"
-                                aria-label="Show moderator password"
-                            >
-                                <i data-lucide="eye"></i>
-                            </button>
-                        </div>
-                    </dd>
-                </div>
-            </dl>
-
-            <div class="sharing-tools">
-                <div class="share-mode-toggle" role="group" aria-label="Share link type">
-                    <button
-                        id="participant-share-button"
-                        type="button"
-                        class="share-mode-button is-active"
-                        data-share-mode="participant"
-                    >
-                        Participants
-                    </button>
-
-                    <button
-                        id="cohost-share-button"
-                        type="button"
-                        class="share-mode-button"
-                        data-share-mode="cohost"
-                    >
-                        Moderator
-                    </button>
-                </div>
-                
-                <button id="show-qr-button" type="button" class="qr-frame qr-button">
-                    <img id="qr-code" alt="Participant QR code">
+        <div class="sharing-tools">
+            <div class="share-mode-toggle" role="group" aria-label="Share link type">
+                <button
+                    id="participant-share-button"
+                    type="button"
+                    class="share-mode-button is-active"
+                    data-share-mode="participant"
+                >
+                    Participants
                 </button>
 
-                <label id="share-link-label" for="participant-link">Participant link</label>
-                <input id="participant-link" type="text" readonly>
+                <button
+                    id="cohost-share-button"
+                    type="button"
+                    class="share-mode-button"
+                    data-share-mode="cohost"
+                >
+                    Moderator
+                </button>
+            </div>
 
-                <div class="button-row">
-                    <button id="copy-link-button" type="button">
-                        Copy link
-                    </button>
+            <button id="show-qr-button" type="button" class="qr-frame qr-button">
+                <img id="qr-code" alt="Participant QR code">
+            </button>
 
-                    <a id="join-link" class="secondary-button" href="#">
-                        Participant view
-                    </a>
+            <label id="share-link-label" for="participant-link">Participant link</label>
+            <input id="participant-link" type="text" readonly>
 
-                    <div id="cohost-notice" class="cohost-notice" hidden>
-                        <i data-lucide="info"></i>
+            <div class="button-row">
+                <button id="copy-link-button" type="button">
+                    Copy link
+                </button>
 
-                        <div class="cohost-notice-text">
-                            <strong>Share this link only</strong>
-                            <span>with trusted moderators.</span>
-                        </div>
+                <a id="join-link" class="secondary-button" href="#">
+                    Participant view
+                </a>
+
+                <div id="cohost-notice" class="cohost-notice" hidden>
+                    <i data-lucide="info"></i>
+
+                    <div class="cohost-notice-text">
+                        <strong>Share this link only</strong>
+                        <span>with trusted moderators.</span>
                     </div>
                 </div>
-
-                <p id="copy-link-message" class="helper-text"></p>
             </div>
 
-            <div class="meeting-actions">
-                <button
-                    id="leave-dashboard-button"
-                    type="button"
-                    class="secondary-button"
-                    hidden
-                >
-                    Leave meeting
-                </button>
+            <p id="copy-link-message" class="helper-text"></p>
+        </div>
 
-                <button
-                    id="end-meeting-button"
-                    type="button"
-                    class="danger-button"
-                >
-                    End meeting
+        <div class="meeting-actions">
+            <button
+                id="leave-dashboard-button"
+                type="button"
+                class="secondary-button"
+                hidden
+            >
+                Leave meeting
+            </button>
+
+            <button
+                id="end-meeting-button"
+                type="button"
+                class="danger-button"
+            >
+                End meeting
+            </button>
+        </div>
+    </section>
+
+    <div class="dashboard-main">
+        <section id="agenda-panel" class="panel agenda-panel">
+            <div class="panel-header">
+                <h2>Agenda</h2>
+                <span id="agenda-timer" class="panel-count agenda-timer" hidden></span>
+            </div>
+
+            <div id="agenda-empty-state" class="agenda-empty-state">
+                <button id="add-agenda-button" type="button" class="small-button">
+                    + Add agenda
                 </button>
             </div>
+
+            <div id="agenda-current-view" class="agenda-current" hidden>
+                <p id="agenda-current-title" class="agenda-current-title">—</p>
+                <p id="agenda-current-meta" class="agenda-current-meta"></p>
+
+                <div class="agenda-controls">
+                    <button id="previous-agenda-button" type="button" class="small-button">
+                        Previous
+                    </button>
+
+                    <button id="next-agenda-button" type="button" class="small-button">
+                        Next item
+                    </button>
+
+                    <button id="edit-agenda-button" type="button" class="small-button secondary-small-button">
+                        Edit
+                    </button>
+                </div>
+            </div>
+
+            <form id="agenda-editor" class="agenda-editor" hidden>
+                <div id="dashboard-agenda-rows" class="agenda-rows"></div>
+
+                <div class="agenda-editor-actions">
+                    <button id="save-agenda-button" type="submit" class="small-button">
+                        Save agenda
+                    </button>
+
+                    <button id="cancel-agenda-button" type="button" class="small-button secondary-small-button">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </section>
 
         <section class="panel speaker-panel">
@@ -180,10 +227,11 @@
             </div>
 
             <ul id="participant-list" class="stack-list"></ul>
+
             <form id="manual-participant-form" class="manual-participant-form">
                 <p class="manual-entry-label">Add participant manually</p>
-                <div class="manual-participant-row">
 
+                <div class="manual-participant-row">
                     <input
                         id="manual-participant-name"
                         type="text"
@@ -196,37 +244,14 @@
                         <option value="Senator*in/Senator">Senator*in/Senator</option>
                         <option value="Gast/Guest">Gast/Guest</option>
                     </select>
-                    <button type="submit">Add</button>
 
+                    <button type="submit">Add</button>
                 </div>
             </form>
         </section>
-    </main>
+    </div>
+</main>
 
-    <footer class="dashboard-footer">
-        <button type="button" class="footer-link" data-feedback-button>
-            <i data-lucide="mail"></i>
-            Feedback
-        </button>
-
-        <button
-            type="button"
-            class="footer-link"
-            data-help-button
-        >
-            <i data-lucide="circle-help"></i>
-            Help &amp; About
-        </button>
-
-        <button
-            type="button"
-            class="footer-link"
-            data-privacy-button
-        >
-            <i data-lucide="shield-check"></i>
-            Privacy
-        </button>
-    </footer>
 </div>
 
 <div id="qr-modal" class="modal" hidden>
@@ -247,6 +272,7 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="/js/common.js"></script>
+<script src="/js/footer.js"></script>
 <script src="/js/help-modal.js"></script>
 <script src="/js/privacy-modal.js"></script>
 <script src="/js/feedback-modal.js"></script>

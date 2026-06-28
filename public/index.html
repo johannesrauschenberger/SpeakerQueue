@@ -15,15 +15,6 @@
 
         <div class="landing-title-row">
             <h1>SpeakerQueue</h1>
-
-            <button
-                type="button"
-                class="help-button"
-                data-help-button
-                aria-label="What is SpeakerQueue?"
-            >
-                ?
-            </button>
         </div>
 
         <p class="intro">
@@ -44,7 +35,36 @@
                         name="meetingName"
                         type="text"
                         placeholder="Meeting name"
+                        required
                     >
+
+                    <input
+                        type="hidden"
+                        id="agenda-data"
+                        name="agenda"
+                        value="[]"
+                    >
+
+                    <label class="agenda-toggle-row">
+                        <input
+                            id="add-agenda-toggle"
+                            type="checkbox"
+                        >
+                        <span>Add agenda</span>
+                    </label>
+
+                    <div id="agenda-builder" class="agenda-builder" hidden>
+                        <div class="agenda-builder-header">
+                            <span>Agenda item</span>
+                            <span>Guidance</span>
+                        </div>
+
+                        <div id="agenda-rows" class="agenda-rows"></div>
+
+                        <p class="helper-text">
+                            Add agenda items in order. Time guidance is optional.
+                        </p>
+                    </div>                   
 
                     <button type="submit">
                         Create meeting
@@ -105,14 +125,16 @@
     </section>
 </main>
 
-<script src="/js/help-modal.js"></script>
-
 <script>
     const joinForm = document.getElementById("join-existing-form");
     const joinToggleButtons = document.querySelectorAll("[data-join-mode]");
     const moderatorPasswordField = document.getElementById("moderator-password-field");
     const moderatorPasswordInput = document.getElementById("join-moderator-password");
     const landingJoinToggle = document.querySelector(".landing-join-toggle");
+    const addAgendaToggle = document.getElementById("add-agenda-toggle");
+    const agendaBuilder = document.getElementById("agenda-builder");
+    const agendaRows = document.getElementById("agenda-rows");
+    const agendaDataInput = document.getElementById("agenda-data");
 
     let joinMode = "participant";
 
@@ -143,13 +165,180 @@
     updateJoinMode();
 
 
+    function createAgendaRow(title = "", targetMinutes = "") {
+        const row = document.createElement("div");
+        row.className = "agenda-row";
+
+        row.innerHTML = `
+            <span class="agenda-row-number"></span>
+
+            <input
+                class="agenda-title-input"
+                type="text"
+                placeholder="Agenda item"
+            >
+
+            <input
+                class="agenda-time-input"
+                type="number"
+                min="1"
+                max="999"
+                placeholder="min"
+                inputmode="numeric"
+            >
+
+            <button
+                type="button"
+                class="agenda-delete-button"
+                aria-label="Remove agenda item"
+            >
+                ×
+            </button>
+        `;
+
+        const titleInput = row.querySelector(".agenda-title-input");
+        const timeInput = row.querySelector(".agenda-time-input");
+
+        const deleteButton = row.querySelector(".agenda-delete-button");
+
+        deleteButton.addEventListener("click", () => {
+            const rows = row.parentElement.querySelectorAll(".agenda-row");
+
+            if (rows.length === 1) {
+                titleInput.value = "";
+                timeInput.value = "";
+                titleInput.focus();
+                updateAgendaData();
+                return;
+            }
+
+            row.remove();
+
+            updateAgendaNumbers();
+            ensureTrailingAgendaRow();
+            updateAgendaData();
+        });
+
+        titleInput.value = title;
+        timeInput.value = targetMinutes;
+
+        titleInput.addEventListener("input", handleAgendaInput);
+        timeInput.addEventListener("input", updateAgendaData);
+
+        titleInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+
+            event.preventDefault();
+
+            ensureTrailingAgendaRow();
+
+            const rows = [...agendaRows.querySelectorAll(".agenda-row")];
+            const currentIndex = rows.indexOf(row);
+            const nextRow = rows[currentIndex + 1];
+
+            nextRow
+                ?.querySelector(".agenda-title-input")
+                ?.focus();
+        });
+
+        return row;
+    }
+
+    function getAgendaRowsData() {
+        if (!addAgendaToggle.checked) return [];
+
+        return [...agendaRows.querySelectorAll(".agenda-row")]
+            .map((row) => {
+                const title = row.querySelector(".agenda-title-input").value.trim();
+                const targetMinutesRaw = row.querySelector(".agenda-time-input").value;
+
+                return {
+                    title,
+                    targetMinutes: targetMinutesRaw ? Number(targetMinutesRaw) : null
+                };
+            })
+            .filter(item => item.title);
+    }
+
+    function updateAgendaNumbers() {
+        const rows = [...agendaRows.querySelectorAll(".agenda-row")];
+
+        rows.forEach((row, index) => {
+            row.querySelector(".agenda-row-number").textContent = `${index + 1}.`;
+        });
+    }
+
+    function ensureTrailingAgendaRow() {
+        const rows = [...agendaRows.querySelectorAll(".agenda-row")];
+        const lastRow = rows[rows.length - 1];
+
+        if (!lastRow) {
+            agendaRows.appendChild(createAgendaRow());
+            updateAgendaNumbers();
+            return;
+        }
+
+        const lastTitle = lastRow.querySelector(".agenda-title-input").value.trim();
+        const lastTime = lastRow.querySelector(".agenda-time-input").value.trim();
+
+        if (lastTitle || lastTime) {
+            agendaRows.appendChild(createAgendaRow());
+            updateAgendaNumbers();
+        }
+    }
+
+    function removeExtraEmptyAgendaRows() {
+        const rows = [...agendaRows.querySelectorAll(".agenda-row")];
+
+        rows.forEach((row, index) => {
+            const isLast = index === rows.length - 1;
+            const title = row.querySelector(".agenda-title-input").value.trim();
+            const time = row.querySelector(".agenda-time-input").value.trim();
+
+            if (!isLast && !title && !time) {
+                row.remove();
+            }
+        });
+
+        updateAgendaNumbers();
+    }
+
+    function updateAgendaData() {
+        agendaDataInput.value = JSON.stringify(getAgendaRowsData());
+    }
+
+    function handleAgendaInput() {
+        ensureTrailingAgendaRow();
+        removeExtraEmptyAgendaRows();
+        updateAgendaData();
+    }
+
+    if (addAgendaToggle && agendaBuilder && agendaRows && agendaDataInput) {
+        addAgendaToggle.addEventListener("change", () => {
+            agendaBuilder.hidden = !addAgendaToggle.checked;
+
+            if (addAgendaToggle.checked && agendaRows.children.length === 0) {
+                agendaRows.appendChild(createAgendaRow());
+                updateAgendaNumbers();
+            }
+
+            if (!addAgendaToggle.checked) {
+                agendaDataInput.value = "[]";
+            } else {
+                updateAgendaData();
+            }
+        });
+    }
+
+
     const landingErrorMessage = document.getElementById("landing-error-message");
 
     const errorMessages = {
         "meeting-not-found": "We couldn’t find that meeting. Please check the Meeting ID and try again.",
         "invalid-moderator-login": "We couldn’t verify those moderator details. Please check the Meeting ID and password.",
         "missing-moderator-details": "Please enter both the Meeting ID and moderator password.",
-        "invalid-moderator-link": "That moderator link is invalid or incomplete. Please use the invitation link from the meeting organiser."
+        "invalid-moderator-link": "That moderator link is invalid or incomplete. Please use the invitation link from the meeting organiser.",
+        "missing-meeting-name": "Please enter a meeting name before creating a meeting.",
     };
 
     const landingParams = new URLSearchParams(window.location.search);
@@ -162,6 +351,10 @@
         window.history.replaceState({}, "", window.location.pathname);
     }
 </script>
-
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="/js/footer.js"></script>
+<script src="/js/help-modal.js"></script>
+<script src="/js/privacy-modal.js"></script>
+<script src="/js/feedback-modal.js"></script>
 </body>
 </html>

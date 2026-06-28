@@ -3,6 +3,7 @@ const path = require("path");
 const http = require("http");
 const QRCode = require("qrcode");
 const { Server } = require("socket.io");
+const crypto = require("crypto");
 
 
 const app = express();
@@ -35,6 +36,15 @@ function generateModeratorSessionToken() {
     return Math.random().toString(36).substring(2, 24);
 }
 
+function createAgendaItem(title, targetMinutes = null) {
+    return {
+        id: crypto.randomUUID(),
+        title,
+        targetMinutes,
+        createdAt: Date.now()
+    };
+}
+
 function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
     if (!meetings[meetingId]) {
         meetings[meetingId] = {
@@ -46,6 +56,10 @@ function getOrCreateMeeting(meetingId, meetingName = "Untitled Meeting") {
             currentSpeaker: null,
             currentSpeakerStartedAt: Date.now(),
             speakerLog: [],
+            agenda: [],
+            currentAgendaIndex: null,
+            currentAgendaStartedAt: null,
+            agendaLog: [],
             hosts: [],
             speakerLimitMinutes: null,
             moderatorPassword: generateModeratorPassword(),
@@ -67,6 +81,9 @@ function broadcastMeetingState(meetingId) {
         createdAt: meeting.createdAt,
         participantCount: meeting.participants.length,
         moderatorCount: meeting.hosts.length,
+        agenda: meeting.agenda,
+        currentAgendaIndex: meeting.currentAgendaIndex,
+        currentAgendaStartedAt: meeting.currentAgendaStartedAt,
         speakerLimitMinutes: meeting.speakerLimitMinutes,
         currentSpeakerStartedAt: meeting.currentSpeakerStartedAt,
         moderatorPassword: meeting.moderatorPassword,
@@ -103,9 +120,37 @@ app.get("/", (req, res) => {
 
 app.post("/meetings", (req, res) => {
     const meetingId = generateMeetingId();
-    const meetingName = req.body.meetingName?.trim() || "Untitled Meeting";
+    const meetingName = req.body.meetingName?.trim();
+
+    if (!meetingName) {
+        return res.redirect("/?error=missing-meeting-name");
+    }
 
     const meeting = getOrCreateMeeting(meetingId, meetingName);
+
+    let submittedAgenda = [];
+
+    if (req.body.agenda) {
+        try {
+            submittedAgenda = JSON.parse(req.body.agenda);
+        } catch (error) {
+            submittedAgenda = [];
+        }
+    }
+
+    meeting.agenda = submittedAgenda
+        .filter(item => item.title && item.title.trim())
+        .map(item =>
+            createAgendaItem(
+                item.title.trim(),
+                item.targetMinutes ? Number(item.targetMinutes) : null
+            )
+        );
+
+    if (meeting.agenda.length > 0) {
+        meeting.currentAgendaIndex = 0;
+        meeting.currentAgendaStartedAt = Date.now();
+    }
 
     res.redirect(`/host/${meetingId}?key=${meeting.moderatorKey}&creator=${meeting.creatorToken}`);
 });
@@ -163,9 +208,11 @@ app.get("/qr/:meetingId", async (req, res) => {
     const meetingId = req.params.meetingId;
     const type = req.query.type === "cohost" ? "cohost" : "participant";
 
+    const meeting = meetings[meetingId];
+
     const sharePath =
-        type === "cohost"
-            ? `/host/${meetingId}`
+        type === "cohost" && meeting
+            ? `/host/${meetingId}?key=${meeting.moderatorKey}`
             : `/join/${meetingId}`;
 
     const shareUrl = `${req.protocol}://${req.get("host")}${sharePath}`;
@@ -199,6 +246,38 @@ function closeCurrentSpeakerLog(meeting) {
             (endedAt - meeting.currentSpeakerStartedAt) / 1000
         )
     });
+}
+
+function closeCurrentAgendaLog(meeting) {
+    if (
+        meeting.currentAgendaIndex === null ||
+        !meeting.currentAgendaStartedAt ||
+        !meeting.agenda[meeting.currentAgendaIndex]
+    ) {
+        return;
+    }
+
+    const endedAt = Date.now();
+    const agendaItem = meeting.agenda[meeting.currentAgendaIndex];
+
+    meeting.agendaLog.push({
+        agendaItemId: agendaItem.id,
+        title: agendaItem.title,
+        startedAt: meeting.currentAgendaStartedAt,
+        endedAt,
+        durationSeconds: Math.round(
+            (endedAt - meeting.currentAgendaStartedAt) / 1000
+        )
+    });
+}
+
+function startAgendaItem(meeting, index) {
+    if (!meeting.agenda[index]) return;
+
+    closeCurrentAgendaLog(meeting);
+
+    meeting.currentAgendaIndex = index;
+    meeting.currentAgendaStartedAt = Date.now();
 }
 
 io.on("connection", (socket) => {
@@ -282,6 +361,73 @@ io.on("connection", (socket) => {
             }
         }
 
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("set-agenda", ({ agenda }) => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = meetings[meetingId];
+        if (!meeting) return;
+
+        closeCurrentAgendaLog(meeting);
+
+        meeting.agenda = (agenda || [])
+            .filter(item => item.title && item.title.trim())
+            .map(item =>
+                createAgendaItem(
+                    item.title.trim(),
+                    item.targetMinutes ? Number(item.targetMinutes) : null
+                )
+            );
+
+        meeting.currentAgendaIndex =
+            meeting.agenda.length > 0 ? 0 : null;
+
+        meeting.currentAgendaStartedAt =
+            meeting.agenda.length > 0 ? Date.now() : null;
+
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("next-agenda-item", () => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+
+        if (
+            meeting.currentAgendaIndex === null ||
+            meeting.currentAgendaIndex >= meeting.agenda.length - 1
+        ) {
+            return;
+        }
+
+        startAgendaItem(meeting, meeting.currentAgendaIndex + 1);
+        broadcastMeetingState(meetingId);
+    });
+
+    socket.on("previous-agenda-item", () => {
+        const meetingId = socket.data.meetingId;
+        const role = socket.data.role;
+
+        if (!meetingId || role !== "host") return;
+
+        const meeting = getOrCreateMeeting(meetingId);
+
+        if (
+            meeting.currentAgendaIndex === null ||
+            meeting.currentAgendaIndex <= 0
+        ) {
+            return;
+        }
+
+        startAgendaItem(meeting, meeting.currentAgendaIndex - 1);
         broadcastMeetingState(meetingId);
     });
 

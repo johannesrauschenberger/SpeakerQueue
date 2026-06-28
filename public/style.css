@@ -38,7 +38,6 @@ body {
 
 .landing-card {
     border-top: 3px solid var(--ink);
-    border-bottom: 1px solid var(--line-strong);
     padding: 28px 0 34px;
 }
 
@@ -209,8 +208,36 @@ a {
 
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 340px 1fr;
+    grid-template-columns: 340px minmax(0, 1fr);
     gap: 20px;
+    align-items: stretch;
+}
+
+.dashboard-main {
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 20px;
+    min-height: 100%;
+}
+
+.participants-panel {
+    min-height: 0;
+    margin-bottom: 0px;
+}
+
+@media (max-width: 860px) {
+    .dashboard-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-main {
+        order: 1;
+    }
+
+    .meeting-panel {
+        order: 2;
+    }
 }
 
 .panel {
@@ -241,10 +268,6 @@ a {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-}
-
-.meeting-panel {
-    grid-row: span 3;
 }
 
 .meeting-details {
@@ -296,10 +319,6 @@ dd {
     color: white;
 }
 
-.speaker-panel {
-    min-height: 210px;
-}
-
 .current-speaker {
     margin: 10px 0 22px;
     font-size: 2.2rem;
@@ -340,21 +359,13 @@ dd {
         grid-template-columns: 1fr;
     }
 
-    .meeting-panel {
-        order: 4;
-        grid-row: auto;
+    .dashboard-main {
+        display: grid;
+        gap: 20px;
     }
 
-    .speaker-panel {
+    .dashboard-main {
         order: 1;
-    }
-
-    .queue-panel {
-        order: 2;
-    }
-
-    .participants-panel {
-        order: 3;
     }
 }
 
@@ -931,29 +942,6 @@ dd {
     gap: 14px;
 }
 
-.help-button {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 0.8rem;
-    font-weight: 600;
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    line-height: 1;
-    margin-top: -5px;
-}
-
-.help-button:hover {
-    background: var(--accent);
-    color: white;
-}
-
 .help-modal-card {
     text-align: left;
 }
@@ -1182,4 +1170,136 @@ dd {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 0.92rem;
     line-height: 1.4;
+}
+
+.agenda-toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    color: var(--muted);
+    cursor: pointer;
+}
+
+.agenda-toggle-row input {
+    width: auto;
+}
+
+.agenda-builder {
+    display: grid;
+    gap: 8px;
+    margin: 4px 0 8px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    background: #faf8f3;
+}
+
+.agenda-builder-header,
+.agenda-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 72px 28px;
+    gap: 8px;
+    align-items: center;
+}
+
+.agenda-builder-header {
+    color: var(--muted);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.agenda-builder-header span:first-child {
+    grid-column: 2;
+}
+
+.agenda-row-number {
+    color: var(--muted);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 650;
+}
+
+.agenda-row input {
+    padding: 8px 9px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 520px) {
+    .agenda-builder-header,
+    .agenda-row {
+        grid-template-columns: 24px minmax(0, 1fr) 72px;
+        gap: 6px;
+    }
+}
+
+.agenda-current-title {
+    margin: 0 0 6px;
+    font-size: 1.35rem;
+    line-height: 1.2;
+}
+
+.agenda-current-meta {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.agenda-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.agenda-controls button {
+    white-space: nowrap;
+}
+
+.agenda-empty-state {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.agenda-editor {
+    display: grid;
+    gap: 10px;
+}
+
+.agenda-editor-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.secondary-small-button {
+    background: transparent;
+    color: var(--accent);
+}
+
+.secondary-small-button:hover {
+    background: var(--accent);
+    color: white;
+}
+
+.agenda-delete-button {
+    border: none;
+    background: transparent;
+
+    color: var(--muted);
+
+    font-size: 1.1rem;
+    line-height: 1;
+
+    cursor: pointer;
+
+    padding: 0;
+
+    transition: color .15s ease;
+}
+
+.agenda-delete-button:hover {
+    color: #c0392b;
+}
+
+.agenda-builder-header span:last-child {
+    grid-column: 3;
 }
