@@ -31,23 +31,137 @@
             and request the floor.
         </p>
 
-        <form action="/meetings" method="POST" class="meeting-form">
-            <label for="meeting-name">Meeting name</label>
+        <p id="landing-error-message" class="landing-error-message" hidden></p>
 
-            <input
-                id="meeting-name"
-                name="meetingName"
-                type="text"
-                placeholder="Senate Meeting – 25 June"
-                required
-            >
+        <div class="landing-actions">
+            <section class="landing-action-section">
+                <h2>Start a new meeting</h2>
 
-            <button type="submit">Create meeting</button>
-        </form>
+                <form class="meeting-form" action="/meetings" method="POST">
+                    <label for="meeting-name">Meeting name</label>
+                    <input
+                        id="meeting-name"
+                        name="meetingName"
+                        type="text"
+                        placeholder="Meeting name"
+                    >
+
+                    <button type="submit">
+                        Create meeting
+                    </button>
+                </form>
+            </section>
+
+            <section class="landing-action-section">
+                <h2>Join an existing meeting</h2>
+
+                <form id="join-existing-form" class="meeting-form" action="/join-participant" method="POST">
+                    <div class="share-mode-toggle landing-join-toggle">
+                        <button
+                            id="join-participant-toggle"
+                            type="button"
+                            class="share-mode-button is-active"
+                            data-join-mode="participant"
+                        >
+                            Participant
+                        </button>
+
+                        <button
+                            id="join-moderator-toggle"
+                            type="button"
+                            class="share-mode-button"
+                            data-join-mode="moderator"
+                        >
+                            Moderator
+                        </button>
+                    </div>
+
+                    <label for="join-meeting-id">Meeting ID</label>
+                    <input
+                        id="join-meeting-id"
+                        name="meetingId"
+                        type="text"
+                        placeholder="ABC123"
+                        autocomplete="off"
+                        required
+                    >
+
+                    <div id="moderator-password-field" hidden>
+                        <label for="join-moderator-password">Moderator password</label>
+                        <input
+                            id="join-moderator-password"
+                            name="moderatorPassword"
+                            type="password"
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <button id="join-existing-button" type="submit">
+                        Join meeting
+                    </button>
+                </form>
+            </section>
+        </div>
     </section>
 </main>
 
 <script src="/js/help-modal.js"></script>
+
+<script>
+    const joinForm = document.getElementById("join-existing-form");
+    const joinToggleButtons = document.querySelectorAll("[data-join-mode]");
+    const moderatorPasswordField = document.getElementById("moderator-password-field");
+    const moderatorPasswordInput = document.getElementById("join-moderator-password");
+    const landingJoinToggle = document.querySelector(".landing-join-toggle");
+
+    let joinMode = "participant";
+
+    function updateJoinMode() {
+        const isModerator = joinMode === "moderator";
+
+        joinForm.action = isModerator ? "/join-moderator" : "/join-participant";
+        moderatorPasswordField.hidden = !isModerator;
+        moderatorPasswordInput.required = isModerator;
+
+        landingJoinToggle.classList.toggle("is-cohost", isModerator);
+
+        joinToggleButtons.forEach((button) => {
+            button.classList.toggle(
+                "is-active",
+                button.dataset.joinMode === joinMode
+            );
+        });
+    }
+
+    joinToggleButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            joinMode = button.dataset.joinMode;
+            updateJoinMode();
+        });
+    });
+
+    updateJoinMode();
+
+
+    const landingErrorMessage = document.getElementById("landing-error-message");
+
+    const errorMessages = {
+        "meeting-not-found": "We couldn’t find that meeting. Please check the Meeting ID and try again.",
+        "invalid-moderator-login": "We couldn’t verify those moderator details. Please check the Meeting ID and password.",
+        "missing-moderator-details": "Please enter both the Meeting ID and moderator password.",
+        "invalid-moderator-link": "That moderator link is invalid or incomplete. Please use the invitation link from the meeting organiser."
+    };
+
+    const landingParams = new URLSearchParams(window.location.search);
+    const landingError = landingParams.get("error");
+
+    if (landingErrorMessage && errorMessages[landingError]) {
+        landingErrorMessage.textContent = errorMessages[landingError];
+        landingErrorMessage.hidden = false;
+
+        window.history.replaceState({}, "", window.location.pathname);
+    }
+</script>
 
 </body>
 </html>

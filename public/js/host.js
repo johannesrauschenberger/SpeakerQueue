@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const suppliedModeratorKey = urlParams.get("key");
     const suppliedCreatorToken = urlParams.get("creator");
+    const suppliedSessionToken = urlParams.get("session");
     const moderatorAuthStorageKey = `speakerqueue-moderator-auth-${meetingId}`;
     const joinLink = document.getElementById("join-link");
     const participantCount = document.getElementById("participant-count");
@@ -182,6 +183,23 @@ document.addEventListener("DOMContentLoaded", () => {
             if (response?.ok) return;
 
             sessionStorage.removeItem(moderatorAuthStorageKey);
+        }
+
+        if (suppliedSessionToken) {
+            const response = await authenticateModerator({
+                sessionToken: suppliedSessionToken
+            });
+
+            if (response?.ok) {
+                sessionStorage.setItem(moderatorAuthStorageKey, response.sessionToken);
+
+                const cleanUrl =
+                    `${window.location.origin}/host/${meetingId}?key=${suppliedModeratorKey}`;
+
+                window.history.replaceState({}, "", cleanUrl);
+
+                return;
+            }
         }
 
         if (suppliedCreatorToken) {

@@ -110,6 +110,38 @@ app.post("/meetings", (req, res) => {
     res.redirect(`/host/${meetingId}?key=${meeting.moderatorKey}&creator=${meeting.creatorToken}`);
 });
 
+app.post("/join-participant", (req, res) => {
+    const meetingId = req.body.meetingId?.trim().toUpperCase();
+
+    if (!meetingId || !meetings[meetingId]) {
+        return res.redirect("/?error=meeting-not-found");
+    }
+
+    res.redirect(`/join/${meetingId}`);
+});
+
+app.post("/join-moderator", (req, res) => {
+    const meetingId = req.body.meetingId?.trim().toUpperCase();
+    const moderatorPassword = req.body.moderatorPassword?.trim().toUpperCase();
+
+    if (!meetingId || !moderatorPassword) {
+        return res.redirect("/?error=missing-moderator-details");
+    }
+
+    const meeting = meetings[meetingId];
+
+    if (!meeting || moderatorPassword !== meeting.moderatorPassword) {
+        return res.redirect("/?error=invalid-moderator-login");
+    }
+
+    const sessionToken = generateModeratorSessionToken();
+    meeting.moderatorSessions.push(sessionToken);
+
+    res.redirect(
+        `/host/${meetingId}?key=${meeting.moderatorKey}&session=${sessionToken}`
+    );
+});
+
 app.get("/host/:meetingId", (req, res) => {
     const meetingId = req.params.meetingId;
     const suppliedKey = req.query.key;
@@ -117,7 +149,7 @@ app.get("/host/:meetingId", (req, res) => {
     const meeting = meetings[meetingId];
 
     if (!meeting || suppliedKey !== meeting.moderatorKey) {
-        return res.redirect("/");
+        return res.redirect("/?error=invalid-moderator-link");
     }
 
     res.sendFile(path.join(__dirname, "public", "host.html"));
