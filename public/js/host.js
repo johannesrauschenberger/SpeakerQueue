@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const agendaEditor = document.getElementById("agenda-editor");
     const dashboardAgendaRows = document.getElementById("dashboard-agenda-rows");
     const cancelAgendaButton = document.getElementById("cancel-agenda-button");
+
     let currentAgenda = [];
     let currentAgendaIndex = null;
     let currentAgendaStartedAt = null;
@@ -59,6 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentSpeakerLimitMinutes = null;
     let moderatorSpeaking = true;
     let currentShareMode = "participant";
+    let queueSortable = null;
+
     const moderatorPasswordDisplay = document.getElementById("moderator-password-display");
     const togglePasswordButton = document.getElementById("toggle-password-button");
     let moderatorKey = null;
@@ -382,7 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const limitMilliseconds = currentSpeakerLimitMinutes * 60 * 1000;
         const progress = elapsed / limitMilliseconds;
 
-        if (progress >= 1) {
+        if (progress >= 0.9) {
             speakerTimer.classList.add("speaker-timer-over");
         } else if (progress >= 0.7) {
             speakerTimer.classList.add("speaker-timer-warning");
@@ -449,7 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         agendaTimer.textContent = formatElapsedTime(elapsed);
         agendaTimer.classList.toggle("speaker-timer-warning", progress >= 0.7 && progress < 1);
-        agendaTimer.classList.toggle("speaker-timer-over", progress >= 1);
+        agendaTimer.classList.toggle("speaker-timer-over", progress >= 0.9);
     }
 
     let dashboardAgendaEditor = null;
@@ -506,7 +509,12 @@ document.addEventListener("DOMContentLoaded", () => {
         createdAtDisplay.textContent = `Created: ${createdAt.toLocaleString()}`;
 
         participantCount.textContent = `${state.participantCount} connected`;
-        queueCount.textContent = `${state.queue.length} waiting`;
+        queueCount.innerHTML = state.queue.length > 0
+            ? `<span class="queue-count-badge">${state.queue.length}</span> waiting`
+            : "0 waiting";
+
+        nextSpeakerButton.disabled =
+            state.queue.length === 0 && !state.currentSpeaker;
 
         moderatorCountDisplay.textContent =
         `${state.moderatorCount} connected`;
@@ -561,9 +569,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         queueList.innerHTML = "";
 
-        state.queue.forEach((participant, index) => {
+        state.queue.forEach((participant) => {
             const li = document.createElement("li");
-            li.className = "moderation-row";
+            li.className = "moderation-row queue-row";
+            li.dataset.participantId = participant.socketId;
+
+            const dragHandle = document.createElement("span");
+            dragHandle.className = "queue-drag";
+            dragHandle.innerHTML = '<i data-lucide="grip-vertical"></i>';
 
             const label = document.createElement("span");
             label.textContent = `${participant.name} (${participant.role})`;
@@ -571,49 +584,42 @@ document.addEventListener("DOMContentLoaded", () => {
             const actions = document.createElement("span");
             actions.className = "moderation-actions";
 
-            const upButton = document.createElement("button");
-            upButton.type = "button";
-            upButton.className = "small-button";
-            upButton.textContent = "↑";
-            upButton.disabled = index === 0;
-            upButton.addEventListener("click", () => {
-                socket.emit("move-queued-participant", {
-                    participantId: participant.socketId,
-                    direction: "up"
-                });
-            });
-
-            const downButton = document.createElement("button");
-            downButton.type = "button";
-            downButton.className = "small-button";
-            downButton.textContent = "↓";
-            downButton.disabled = index === state.queue.length - 1;
-            downButton.addEventListener("click", () => {
-                socket.emit("move-queued-participant", {
-                    participantId: participant.socketId,
-                    direction: "down"
-                });
-            });
-
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "small-button danger-small-button";
-            removeButton.textContent = "Remove";
+            removeButton.textContent = "Unqueue";
             removeButton.addEventListener("click", () => {
                 socket.emit("remove-from-queue", {
                     participantId: participant.socketId
                 });
             });
 
-            actions.appendChild(upButton);
-            actions.appendChild(downButton);
             actions.appendChild(removeButton);
 
+            li.appendChild(dragHandle);
             li.appendChild(label);
             li.appendChild(actions);
 
             queueList.appendChild(li);
         });
+
+        if (window.Sortable && queueList && !queueSortable) {
+            queueSortable = Sortable.create(queueList, {
+                animation: 150,
+                handle: ".queue-drag",
+
+                onEnd() {
+                    const orderedParticipantIds = [...queueList.querySelectorAll(".queue-row")]
+                        .map(row => row.dataset.participantId);
+
+                    socket.emit("reorder-queue", {
+                        orderedParticipantIds
+                    });
+                }
+            });
+        }
+
+        renderLucideIcons();
 
         const newSpeakerKey = state.currentSpeaker
             ? `${state.currentSpeaker.name}-${state.currentSpeaker.role}`

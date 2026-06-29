@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const participantRoleDisplay = document.getElementById("participant-role-display");
     const participantSpeakingTimer = document.getElementById("participant-speaking-timer");
 
+    const participantEyebrow = document.getElementById("participant-eyebrow");
     let speakerLimitMinutes = null;
     let currentSpeakerStartedAt = null;
     let participantIsSpeaking = false;
@@ -29,6 +30,37 @@ document.addEventListener("DOMContentLoaded", () => {
     let handRaised = false;
     let mySocketId = null;
     let wakeLock = null;
+
+    const participantSessionStorageKey = `speakerqueue-participant-session-${meetingId}`;
+
+    function saveParticipantSession(name, participantRole) {
+        sessionStorage.setItem(
+            participantSessionStorageKey,
+            JSON.stringify({
+                name,
+                participantRole
+            })
+        );
+    }
+
+    function getParticipantSession() {
+        try {
+            return JSON.parse(sessionStorage.getItem(participantSessionStorageKey));
+        } catch {
+            return null;
+        }
+    }
+
+    function clearParticipantSession() {
+        sessionStorage.removeItem(participantSessionStorageKey);
+    }
+
+    function showParticipantView(name, participantRole) {
+        participantName.textContent = `${name} · ${participantRole}`;
+        joinSection.hidden = true;
+        meetingSection.hidden = false;
+        requestWakeLock();
+    }
 
     async function requestWakeLock() {
         if (!("wakeLock" in navigator)) {
@@ -60,6 +92,24 @@ document.addEventListener("DOMContentLoaded", () => {
     socket.on("connect", () => {
         mySocketId = socket.id;
 
+        const savedSession = getParticipantSession();
+
+        if (savedSession?.name && savedSession?.participantRole) {
+            socket.emit("join-meeting", {
+                meetingId,
+                role: "participant",
+                name: savedSession.name,
+                participantRole: savedSession.participantRole
+            });
+
+            showParticipantView(
+                savedSession.name,
+                savedSession.participantRole
+            );
+
+            return;
+        }
+
         socket.emit("join-meeting", {
             meetingId,
             role: "viewer"
@@ -87,10 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
             participantRole
         });
 
-        participantName.textContent = `${name} · ${participantRole}`;
-        joinSection.hidden = true;
-        meetingSection.hidden = false;
-        requestWakeLock();
+        saveParticipantSession(name, participantRole);
+        showParticipantView(name, participantRole);
     });
 
     raiseHandButton.addEventListener("click", () => {
@@ -107,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirmed) return;
 
         socket.emit("leave-meeting");
+        clearParticipantSession();
 
         handRaised = false;
         raiseHandLabel.textContent = "Raise hand";
@@ -165,7 +214,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (participantSpeakingTimer) {
             participantSpeakingTimer.hidden = false;
-            participantSpeakingTimer.textContent = ` · ${formatElapsedTime(elapsed)}`;
+
+            if (speakerLimitMinutes) {
+                const limitMilliseconds = speakerLimitMinutes * 60 * 1000;
+
+                participantSpeakingTimer.textContent =
+                    ` · ${formatElapsedTime(elapsed)} / ${formatElapsedTime(limitMilliseconds)}`;
+            } else {
+                participantSpeakingTimer.textContent = ` · ${formatElapsedTime(elapsed)}`;
+            }
+
             participantSpeakingTimer.classList.remove(
                 "speaker-timer-warning",
                 "speaker-timer-over"
@@ -195,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         raiseHandButton.classList.toggle(
             "timer-over",
-            progress >= 1
+            progress >= 0.9
         );
 
         if (participantSpeakingTimer) {
@@ -206,7 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             participantSpeakingTimer.classList.toggle(
                 "speaker-timer-over",
-                progress >= 1
+                progress >= 0.9
             );
         }
 
@@ -224,6 +282,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         participantMeetingName.textContent = state.meetingName;
         activeMeetingName.textContent = state.meetingName;
+
+        const agenda = state.agenda || [];
+        const currentAgendaIndex = state.currentAgendaIndex;
+
+        if (
+            participantEyebrow &&
+            agenda.length > 0 &&
+            currentAgendaIndex !== null &&
+            agenda[currentAgendaIndex]
+        ) {
+            participantEyebrow.textContent =
+                `Participant · ${agenda[currentAgendaIndex].title} ${currentAgendaIndex + 1}/${agenda.length}`;
+        } else if (participantEyebrow) {
+            participantEyebrow.textContent = "Participant";
+        }
 
         const me = state.participants.find(
             participant => participant.socketId === mySocketId
@@ -286,16 +359,17 @@ document.addEventListener("DOMContentLoaded", () => {
         meetingSection.hidden = true;
         endedSection.hidden = false;
         releaseWakeLock();
+        clearParticipantSession();
     });
 
     socket.on("removed-from-meeting", () => {
         alert("You have been removed from the meeting.");
 
-        releaseWakeLock();
-
         joinSection.hidden = true;
         meetingSection.hidden = true;
         endedSection.hidden = false;
+        releaseWakeLock();
+        clearParticipantSession();
     });
 
     lucide.createIcons();

@@ -225,21 +225,6 @@ a {
     margin-bottom: 0px;
 }
 
-@media (max-width: 860px) {
-    .dashboard-grid {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .dashboard-main {
-        order: 1;
-    }
-
-    .meeting-panel {
-        order: 2;
-    }
-}
-
 .panel {
     background: var(--panel);
     border: 1px solid var(--line-strong);
@@ -247,7 +232,8 @@ a {
     padding: 20px;
 }
 
-.dashboard-grid > .panel {
+.dashboard-grid > .panel,
+.dashboard-main > .panel {
     max-width: none;
     margin: 0;
 }
@@ -295,12 +281,6 @@ dd {
     font-size: 1rem;
 }
 
-.link-tools {
-    display: grid;
-    gap: 10px;
-    margin-bottom: 24px;
-}
-
 .helper-text {
     min-height: 1.2em;
     margin: 0;
@@ -339,34 +319,6 @@ dd {
 
 .stack-list li:last-child {
     border-bottom: none;
-}
-
-@media (max-width: 860px) {
-    .app-page {
-        padding: 20px;
-    }
-
-    .app-header {
-        display: block;
-    }
-
-    .header-meta {
-        margin-top: 12px;
-        text-align: left;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .dashboard-main {
-        display: grid;
-        gap: 20px;
-    }
-
-    .dashboard-main {
-        order: 1;
-    }
 }
 
 .panel-count {
@@ -805,28 +757,6 @@ dd {
 .small-button:disabled {
     opacity: 0.35;
     cursor: not-allowed;
-}
-
-.feedback-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 18px;
-    color: var(--muted);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 0.9rem;
-    line-height: 1.35;
-    text-decoration: none;
-}
-
-.feedback-link:hover {
-    color: var(--accent);
-}
-
-.feedback-link svg {
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
 }
 
 .share-mode-toggle {
@@ -1326,4 +1256,81 @@ dd {
 .agenda-delete-button:focus-visible {
     background: transparent;
     color: var(--danger);
+}
+
+.queue-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+    gap: 10px;
+}
+
+.queue-drag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    cursor: grab;
+    opacity: 0.55;
+}
+
+.queue-drag:hover {
+    opacity: 1;
+    color: var(--accent);
+}
+
+.queue-drag:active {
+    cursor: grabbing;
+}
+
+.queue-drag svg {
+    width: 16px;
+    height: 16px;
+}
+
+.queue-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 1.25rem;
+    height: 1.25rem;
+    margin: 0 3px;
+
+    border-radius: 999px;
+    background: var(--danger);
+    color: white;
+
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+@media (max-width: 860px) {
+    .app-page {
+        padding: 20px;
+    }
+
+    .app-header {
+        display: block;
+    }
+
+    .header-meta {
+        margin-top: 12px;
+        text-align: left;
+    }
+
+    .dashboard-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .dashboard-main {
+        display: grid;
+        gap: 20px;
+        order: 1;
+    }
+
+    .meeting-panel {
+        order: 2;
+    }
 }

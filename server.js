@@ -659,28 +659,26 @@ io.on("connection", (socket) => {
         broadcastMeetingState(meetingId);
     });
 
-    socket.on("move-queued-participant", ({ participantId, direction }) => {
+    socket.on("reorder-queue", ({ orderedParticipantIds }) => {
         const meetingId = socket.data.meetingId;
         const role = socket.data.role;
 
         if (!meetingId || role !== "host") return;
+        if (!Array.isArray(orderedParticipantIds)) return;
 
         const meeting = getOrCreateMeeting(meetingId);
-        const currentIndex = meeting.queue.indexOf(participantId);
 
-        if (currentIndex === -1) return;
+        const validQueuedIds = new Set(meeting.queue);
 
-        const newIndex =
-            direction === "up"
-                ? currentIndex - 1
-                : direction === "down"
-                    ? currentIndex + 1
-                    : currentIndex;
+        const reorderedQueue = orderedParticipantIds.filter(
+            participantId => validQueuedIds.has(participantId)
+        );
 
-        if (newIndex < 0 || newIndex >= meeting.queue.length) return;
+        if (reorderedQueue.length !== meeting.queue.length) {
+            return;
+        }
 
-        const [movedParticipant] = meeting.queue.splice(currentIndex, 1);
-        meeting.queue.splice(newIndex, 0, movedParticipant);
+        meeting.queue = reorderedQueue;
 
         broadcastMeetingState(meetingId);
     });
