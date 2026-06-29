@@ -125,6 +125,12 @@
     </section>
 </main>
 
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="/js/common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<script src="/js/agenda.js"></script>
+
 <script>
     const joinForm = document.getElementById("join-existing-form");
     const joinToggleButtons = document.querySelectorAll("[data-join-mode]");
@@ -164,169 +170,29 @@
 
     updateJoinMode();
 
-
-    function createAgendaRow(title = "", targetMinutes = "") {
-        const row = document.createElement("div");
-        row.className = "agenda-row";
-
-        row.innerHTML = `
-            <span class="agenda-row-number"></span>
-
-            <input
-                class="agenda-title-input"
-                type="text"
-                placeholder="Agenda item"
-            >
-
-            <input
-                class="agenda-time-input"
-                type="number"
-                min="1"
-                max="999"
-                placeholder="min"
-                inputmode="numeric"
-            >
-
-            <button
-                type="button"
-                class="agenda-delete-button"
-                aria-label="Remove agenda item"
-            >
-                ×
-            </button>
-        `;
-
-        const titleInput = row.querySelector(".agenda-title-input");
-        const timeInput = row.querySelector(".agenda-time-input");
-
-        const deleteButton = row.querySelector(".agenda-delete-button");
-
-        deleteButton.addEventListener("click", () => {
-            const rows = row.parentElement.querySelectorAll(".agenda-row");
-
-            if (rows.length === 1) {
-                titleInput.value = "";
-                timeInput.value = "";
-                titleInput.focus();
-                updateAgendaData();
-                return;
-            }
-
-            row.remove();
-
-            updateAgendaNumbers();
-            ensureTrailingAgendaRow();
-            updateAgendaData();
-        });
-
-        titleInput.value = title;
-        timeInput.value = targetMinutes;
-
-        titleInput.addEventListener("input", handleAgendaInput);
-        timeInput.addEventListener("input", updateAgendaData);
-
-        titleInput.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter") return;
-
-            event.preventDefault();
-
-            ensureTrailingAgendaRow();
-
-            const rows = [...agendaRows.querySelectorAll(".agenda-row")];
-            const currentIndex = rows.indexOf(row);
-            const nextRow = rows[currentIndex + 1];
-
-            nextRow
-                ?.querySelector(".agenda-title-input")
-                ?.focus();
-        });
-
-        return row;
-    }
-
-    function getAgendaRowsData() {
-        if (!addAgendaToggle.checked) return [];
-
-        return [...agendaRows.querySelectorAll(".agenda-row")]
-            .map((row) => {
-                const title = row.querySelector(".agenda-title-input").value.trim();
-                const targetMinutesRaw = row.querySelector(".agenda-time-input").value;
-
-                return {
-                    title,
-                    targetMinutes: targetMinutesRaw ? Number(targetMinutesRaw) : null
-                };
-            })
-            .filter(item => item.title);
-    }
-
-    function updateAgendaNumbers() {
-        const rows = [...agendaRows.querySelectorAll(".agenda-row")];
-
-        rows.forEach((row, index) => {
-            row.querySelector(".agenda-row-number").textContent = `${index + 1}.`;
-        });
-    }
-
-    function ensureTrailingAgendaRow() {
-        const rows = [...agendaRows.querySelectorAll(".agenda-row")];
-        const lastRow = rows[rows.length - 1];
-
-        if (!lastRow) {
-            agendaRows.appendChild(createAgendaRow());
-            updateAgendaNumbers();
-            return;
-        }
-
-        const lastTitle = lastRow.querySelector(".agenda-title-input").value.trim();
-        const lastTime = lastRow.querySelector(".agenda-time-input").value.trim();
-
-        if (lastTitle || lastTime) {
-            agendaRows.appendChild(createAgendaRow());
-            updateAgendaNumbers();
-        }
-    }
-
-    function removeExtraEmptyAgendaRows() {
-        const rows = [...agendaRows.querySelectorAll(".agenda-row")];
-
-        rows.forEach((row, index) => {
-            const isLast = index === rows.length - 1;
-            const title = row.querySelector(".agenda-title-input").value.trim();
-            const time = row.querySelector(".agenda-time-input").value.trim();
-
-            if (!isLast && !title && !time) {
-                row.remove();
-            }
-        });
-
-        updateAgendaNumbers();
-    }
-
-    function updateAgendaData() {
-        agendaDataInput.value = JSON.stringify(getAgendaRowsData());
-    }
-
-    function handleAgendaInput() {
-        ensureTrailingAgendaRow();
-        removeExtraEmptyAgendaRows();
-        updateAgendaData();
-    }
+    let landingAgendaEditor = null;
 
     if (addAgendaToggle && agendaBuilder && agendaRows && agendaDataInput) {
+        landingAgendaEditor = createAgendaEditor({
+            rowsContainer: agendaRows,
+            initialAgenda: [],
+            onChange: (agenda) => {
+                agendaDataInput.value = JSON.stringify(
+                    addAgendaToggle.checked ? agenda : []
+                );
+            }
+        });
+
         addAgendaToggle.addEventListener("change", () => {
             agendaBuilder.hidden = !addAgendaToggle.checked;
 
-            if (addAgendaToggle.checked && agendaRows.children.length === 0) {
-                agendaRows.appendChild(createAgendaRow());
-                updateAgendaNumbers();
-            }
-
             if (!addAgendaToggle.checked) {
                 agendaDataInput.value = "[]";
-            } else {
-                updateAgendaData();
+                return;
             }
+
+            agendaDataInput.value = JSON.stringify(landingAgendaEditor.getData());
+            landingAgendaEditor.focusFirstRow();
         });
     }
 
@@ -351,7 +217,7 @@
         window.history.replaceState({}, "", window.location.pathname);
     }
 </script>
-<script src="https://unpkg.com/lucide@latest"></script>
+
 <script src="/js/footer.js"></script>
 <script src="/js/help-modal.js"></script>
 <script src="/js/privacy-modal.js"></script>

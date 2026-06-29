@@ -1197,7 +1197,7 @@ dd {
 .agenda-builder-header,
 .agenda-row {
     display: grid;
-    grid-template-columns: 28px minmax(0, 1fr) 72px 28px;
+    grid-template-columns: 28px minmax(0, 1fr) 70px 24px 24px;
     gap: 8px;
     align-items: center;
 }
@@ -1213,10 +1213,37 @@ dd {
     grid-column: 2;
 }
 
+.agenda-builder-header span:last-child {
+    grid-column: 3;
+}
+
 .agenda-row-number {
     color: var(--muted);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-weight: 650;
+}
+
+.agenda-drag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    cursor: grab;
+    opacity: 0.55;
+}
+
+.agenda-drag:hover {
+    opacity: 1;
+    color: var(--accent);
+}
+
+.agenda-drag:active {
+    cursor: grabbing;
+}
+
+.agenda-drag svg {
+    width: 16px;
+    height: 16px;
 }
 
 .agenda-row input {
@@ -1227,7 +1254,7 @@ dd {
 @media (max-width: 520px) {
     .agenda-builder-header,
     .agenda-row {
-        grid-template-columns: 24px minmax(0, 1fr) 72px;
+        grid-template-columns: 24px minmax(0, 1fr) 60px 22px 22px;
         gap: 6px;
     }
 }
@@ -1280,26 +1307,23 @@ dd {
     color: white;
 }
 
-.agenda-delete-button {
+.agenda-delete-button,
+.agenda-delete-button:hover,
+.agenda-delete-button:focus,
+.agenda-delete-button:active {
+    width: auto;
+    padding: 0;
     border: none;
     background: transparent;
-
     color: var(--muted);
-
+    cursor: pointer;
     font-size: 1.1rem;
     line-height: 1;
-
-    cursor: pointer;
-
-    padding: 0;
-
-    transition: color .15s ease;
+    box-shadow: none;
 }
 
-.agenda-delete-button:hover {
-    color: #c0392b;
-}
-
-.agenda-builder-header span:last-child {
-    grid-column: 3;
+.agenda-delete-button:hover,
+.agenda-delete-button:focus-visible {
+    background: transparent;
+    color: var(--danger);
 }

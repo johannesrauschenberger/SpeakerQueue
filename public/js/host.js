@@ -452,167 +452,35 @@ document.addEventListener("DOMContentLoaded", () => {
         agendaTimer.classList.toggle("speaker-timer-over", progress >= 1);
     }
 
-    function createDashboardAgendaRow(title = "", targetMinutes = "") {
-        const row = document.createElement("div");
-        row.className = "agenda-row";
+    let dashboardAgendaEditor = null;
 
-        row.innerHTML = `
-            <span class="agenda-row-number"></span>
-
-            <input
-                class="agenda-title-input"
-                type="text"
-                placeholder="Agenda item"
-            >
-
-            <input
-                class="agenda-time-input"
-                type="number"
-                min="1"
-                max="999"
-                placeholder="min"
-                inputmode="numeric"
-            >
-
-            <button
-                type="button"
-                class="agenda-delete-button"
-                aria-label="Remove agenda item"
-            >
-                ×
-            </button>
-        `;
-
-        const titleInput = row.querySelector(".agenda-title-input");
-        const timeInput = row.querySelector(".agenda-time-input");
-
-        const deleteButton = row.querySelector(".agenda-delete-button");
-
-        deleteButton.addEventListener("click", () => {
-            const rows = row.parentElement.querySelectorAll(".agenda-row");
-
-            if (rows.length === 1) {
-                titleInput.value = "";
-                timeInput.value = "";
-                titleInput.focus();
-                return;
-            }
-
-            row.remove();
-
-            updateDashboardAgendaNumbers();  // host.js
-
-            ensureDashboardTrailingAgendaRow();  // host.js
+    if (dashboardAgendaRows) {
+        dashboardAgendaEditor = createAgendaEditor({
+            rowsContainer: dashboardAgendaRows,
+            initialAgenda: [],
+            onChange: () => {}
         });
-
-        titleInput.value = title;
-        timeInput.value = targetMinutes || "";
-
-        titleInput.addEventListener("input", handleDashboardAgendaInput);
-        timeInput.addEventListener("input", handleDashboardAgendaInput);
-
-        titleInput.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter") return;
-
-            event.preventDefault();
-            ensureDashboardTrailingAgendaRow();
-
-            const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
-            const currentIndex = rows.indexOf(row);
-            rows[currentIndex + 1]
-                ?.querySelector(".agenda-title-input")
-                ?.focus();
-        });
-
-        return row;
-    }
-
-    function updateDashboardAgendaNumbers() {
-        const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
-
-        rows.forEach((row, index) => {
-            row.querySelector(".agenda-row-number").textContent = `${index + 1}.`;
-        });
-    }
-
-    function ensureDashboardTrailingAgendaRow() {
-        const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
-        const lastRow = rows[rows.length - 1];
-
-        if (!lastRow) {
-            dashboardAgendaRows.appendChild(createDashboardAgendaRow());
-            updateDashboardAgendaNumbers();
-            return;
-        }
-
-        const lastTitle = lastRow.querySelector(".agenda-title-input").value.trim();
-        const lastTime = lastRow.querySelector(".agenda-time-input").value.trim();
-
-        if (lastTitle || lastTime) {
-            dashboardAgendaRows.appendChild(createDashboardAgendaRow());
-            updateDashboardAgendaNumbers();
-        }
-    }
-
-    function removeDashboardExtraEmptyAgendaRows() {
-        const rows = [...dashboardAgendaRows.querySelectorAll(".agenda-row")];
-
-        rows.forEach((row, index) => {
-            const isLast = index === rows.length - 1;
-            const title = row.querySelector(".agenda-title-input").value.trim();
-            const time = row.querySelector(".agenda-time-input").value.trim();
-
-            if (!isLast && !title && !time) {
-                row.remove();
-            }
-        });
-
-        updateDashboardAgendaNumbers();
-    }
-
-    function handleDashboardAgendaInput() {
-        ensureDashboardTrailingAgendaRow();
-        removeDashboardExtraEmptyAgendaRows();
     }
 
     function getDashboardAgendaData() {
-        return [...dashboardAgendaRows.querySelectorAll(".agenda-row")]
-            .map((row) => {
-                const title = row.querySelector(".agenda-title-input").value.trim();
-                const targetMinutesRaw = row.querySelector(".agenda-time-input").value;
-
-                return {
-                    title,
-                    targetMinutes: targetMinutesRaw ? Number(targetMinutesRaw) : null
-                };
-            })
-            .filter(item => item.title);
+        return dashboardAgendaEditor ? dashboardAgendaEditor.getData() : [];
     }
 
     function openAgendaEditor() {
-        dashboardAgendaRows.innerHTML = "";
-
-        if (currentAgenda.length > 0) {
-            currentAgenda.forEach((item) => {
-                dashboardAgendaRows.appendChild(
-                    createDashboardAgendaRow(item.title, item.targetMinutes)
-                );
-            });
-        }
-
-        ensureDashboardTrailingAgendaRow();
-        updateDashboardAgendaNumbers();
+        dashboardAgendaEditor.setAgenda(currentAgenda);
 
         agendaEmptyState.hidden = true;
         agendaCurrentView.hidden = true;
         agendaEditor.hidden = false;
 
-        dashboardAgendaRows
-            .querySelector(".agenda-title-input")
-            ?.focus();
+        dashboardAgendaEditor.focusFirstRow();
     }
 
     function closeAgendaEditor() {
+        if (dashboardAgendaEditor) {
+            dashboardAgendaEditor.setAgenda(currentAgenda);
+        }
+
         agendaEditor.hidden = true;
         updateAgendaPanel();
     }
